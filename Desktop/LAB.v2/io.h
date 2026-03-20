@@ -3,6 +3,7 @@
 
 #include "complex.h"
 #include <stdlib.h>
+#include <stdarg.h>
 
 #define  MAX_NUM_LEN 50
 
@@ -25,6 +26,7 @@ typedef struct
 
 void clean_input_buffer();
 
+int map(void func(void*), int count, ...);
 C_info check_cmplx(char* str);
 int check_float(char* str);
 int get_cmplx(char* str, Complex* num);
@@ -35,5 +37,6 @@ char* output_lnf(void* lnf, unsigned size, char type);
 Lnf get_lnf(char* str, char type);
 void* get_factor(char* str, char type);
 char* output_num(void* num, char type);
+char* error_massage(int err_code);
 
 #endif

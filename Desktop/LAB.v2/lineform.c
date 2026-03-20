@@ -6,6 +6,8 @@ dif_add set_for_dif_add(void* a, void* b, char type, unsigned size_a, unsigned s
 {
     dif_add lnf;
 
+    if (!a || !b || !size_a || !size_b) return UNCOR_LNF_ERR;
+
     lnf.a = a;
     lnf.b = b;
     lnf.size_a = size_a;
@@ -16,11 +18,12 @@ dif_add set_for_dif_add(void* a, void* b, char type, unsigned size_a, unsigned s
         lnf.add_lnf =  get_cmplx_sum;
         lnf.dif_lnf = get_cmplx_dif;
     }
-    else
+    else if (type == 'f')
     {
         lnf.add_lnf = get_flt_sum;
         lnf.dif_lnf = get_flt_dif;
     }
+    else return UNCOR_TYPE_ERR;
 
     return lnf;
 }

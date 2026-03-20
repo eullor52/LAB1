@@ -1,9 +1,19 @@
 #include "io.h"
 #include <stdio.h>
 
-#define NUM_ERROR (Lnf){NULL, -1}
-#define MEMORY_ERROR (Lnf){NULL, -2}
-#define TYPE_ERROR (Lnf){NULL, -3}
+int error_treaker;
+
+#define NUM_ERROR (Lnf){NULL, 201}
+#define MEMORY_ERROR (Lnf){NULL, 202}
+#define TYPE_ERROR (Lnf){NULL, 203}
+
+void map(void func(void*), int count, ...)
+{
+    va_list args;
+    va_start(args, count);
+
+    for (int i = 0; i < count; i++) func(va_arg(args, void*));
+}
 
 void clean_input_buffer()
 {
@@ -379,4 +389,12 @@ char* output_num(void* num, char type)
         return result;
     }
     else return NULL;
+}
+
+char* error_massage(int err_code)
+{
+    switch(err_code)
+    {
+        case 1:
+    }
 }

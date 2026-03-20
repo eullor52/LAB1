@@ -6,11 +6,7 @@
 
 unsigned result_size(unsigned a, unsigned b);
 
-typedef struct
-{
-    char* input;
-    char type;
-}Input;
+#define MEMORY_INPUT_ERR 101
 
 char* get_input(int mode)
 {
@@ -24,7 +20,11 @@ char* get_input(int mode)
     {
         ++i;
         char* p = realloc(buffer, sizeof(char) * (i + 1));
-        if (!p) return NULL;
+        if (!p) 
+        {
+            free(buffer);
+            return 0;
+        }
         buffer = p;
         buffer[i] = getchar();
     }
@@ -48,11 +48,26 @@ int main()
             char type = getchar();
             clean_input_buffer();
 
-            char* str1 = get_input(1); /*Ok*/
-            char* str2 = get_input(1); /*Ok*/
+            char* str1 = get_input(1);
+            char* str2 = get_input(1);
             
-            Lnf a = get_lnf(str1, type); /*Ok*/
-            Lnf b = get_lnf(str2, type); /*Ok*/
+            Lnf a = get_lnf(str1, type);
+            if (!a.lnf)
+            {
+                char* str = error_massage(a.size);
+                printf("%s", str);
+                free(str);
+                continue;
+            }
+
+            Lnf b = get_lnf(str2, type);
+            if (!a.lnf)
+            {
+                char* str = error_massage(a.size);
+                printf("%s", str);
+                free(str);
+                continue;
+            }
 
             dif_add lnf = set_for_dif_add(a.lnf, b.lnf, type, a.size, b.size);
 
@@ -68,6 +83,7 @@ int main()
             free(str2);
             free(a.lnf);
             free(b.lnf);
+            map(free, 6, result, output, str1, str2, a.lnf, b.lnf);
         }
         else if (choise == '2')
         {
