@@ -1,19 +1,24 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -I headers
+SRCDIR = srcs
+OBJDIR = obj
+TARGET = program
 
-TARGET = program.exe
-SRCS = main.c complex.c io.c operations.c lineform.c
-OBJS = main.o complex.o io.o operations.o lineform.o
+SOURCES = $(wildcard $(SRCDIR)/*.c)
+OBJECTS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SOURCES))
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+$(TARGET): $(OBJECTS)
+	$(CC) $^ -o $@
 
-$(OBJS): $(SRCS)
-	$(CC) $(CFLAGS) -c $< $^
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf $(OBJDIR) $(TARGET)
 
-.PHONY: all clean
+.PHONY: clean

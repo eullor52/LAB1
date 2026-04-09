@@ -1,6 +1,7 @@
 #include "operations.h"
 #include "complex.h"
 #include <stdlib.h>
+#include "globals.h"
 
 unsigned result_size(unsigned a, unsigned b)
 {
@@ -10,8 +11,20 @@ unsigned result_size(unsigned a, unsigned b)
 
 void* get_cmplx_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 {
+    if ( !(a && b && size_a && size_b))
+    {
+        set_error(101);
+        return NULL;
+    }
     unsigned r_size = result_size(size_a, size_b);
     Complex* result = malloc(sizeof(Complex) * r_size);
+
+    if (!result)
+    {
+        set_error(102);
+        return NULL;
+    }
+
     Complex *left = (Complex*)a, *right = (Complex*)b;
 
     if (size_a > size_b)
@@ -30,8 +43,20 @@ void* get_cmplx_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 
 void* get_flt_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 {
+    if ( !(a && b && size_a && size_b))
+    {
+        set_error(111);
+        return NULL;
+    }
+
     unsigned r_size = result_size(size_a, size_b);
     float* result = malloc(sizeof(float) * r_size);
+
+    if (!result)
+    {
+        set_error(112);
+    }
+
     float *left = (float*)a, *right = (float*)b;
 
     if (size_a > size_b)
@@ -50,8 +75,21 @@ void* get_flt_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 
 void* get_cmplx_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 {
+    if ( !(a && b && size_a && size_b))
+    {
+        set_error(121);
+        return NULL;
+    }
+
     unsigned r_size = result_size(size_a, size_b);
     Complex* result = malloc(sizeof(Complex) * r_size);
+
+    if (!result)
+    {
+        set_error(122);
+        return NULL;
+    }
+
     Complex *left = (Complex*)a, *right = (Complex*)b;
 
     if (size_a > size_b)
@@ -75,8 +113,21 @@ void* get_cmplx_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 
 void* get_flt_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 {
+    if ( !(a && b && size_a && size_b))
+    {
+        set_error(131);
+        return NULL;
+    }
+
     unsigned r_size = result_size(size_a, size_b);
     float* result = malloc(sizeof(float) * r_size);
+
+    if (!result)
+    {
+        set_error(132);
+        return NULL;
+    }
+
     float *left = (float*)a, *right = (float*)b;
 
     if (size_a > size_b)
@@ -95,7 +146,20 @@ void* get_flt_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 
 void* get_cmplx_mul(void* a, void* b, unsigned size)
 {
+    if (!(a && b && size))
+    {
+        set_error(141);
+        return NULL;
+    }
+
     Complex* result = malloc(sizeof(Complex) * size);
+
+    if (!result)
+    {
+        set_error(142);
+        return NULL;
+    }
+
     Complex *lnf = (Complex*)a, *factor = (Complex*)b;
 
     for (int i = 0; i < size; i++) result[i] = mul_cmplx(lnf[i], *factor);
@@ -105,7 +169,20 @@ void* get_cmplx_mul(void* a, void* b, unsigned size)
 
 void* get_flt_mul(void* a, void* b, unsigned size)
 {
+    if (!(a && b && size))
+    {
+        set_error(141);
+        return NULL;
+    }
+
     float* result = malloc(sizeof(float) * size);
+
+    if(!result)
+    {
+        set_error(152);
+        return NULL;
+    }
+
     float *lnf = (float*)a, *factor = (float*)b;
 
     for (int i = 0; i < size; i++) result[i] = lnf[i] * (*factor);
@@ -115,7 +192,19 @@ void* get_flt_mul(void* a, void* b, unsigned size)
 
 void* get_cmplx_calc(void* a, void* b, unsigned size)
 {
+    if (!(a && b && size))
+    {
+        set_error(161);
+        return NULL;
+    }
+
     Complex* result  = malloc(sizeof(Complex));
+
+    if (!result)
+    {
+        set_error(162);
+        return NULL;
+    }
     Complex *lnf  = (Complex*)a, *factors = (Complex*)b;
 
     *result  = lnf[0];
@@ -130,7 +219,20 @@ void* get_cmplx_calc(void* a, void* b, unsigned size)
 
 void* get_flt_calc(void* a, void* b, unsigned size)
 {
+    if (!(a && b && size))
+    {
+        set_error(171);
+        return NULL;
+    }
+
     float* result  = malloc(sizeof(float));
+
+    if (!result)
+    {
+        set_error(172);
+        return NULL;
+    }
+    
     float *lnf  = (float*)a, *factors = (float*)b;
 
     *result  = lnf[0];

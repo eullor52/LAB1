@@ -3,10 +3,10 @@
 #include "lineform.h"
 #include <stdlib.h>
 #include <conio.h>
+#include "globals.h"
+
 
 unsigned result_size(unsigned a, unsigned b);
-
-#define MEMORY_INPUT_ERR 101
 
 char* get_input(int mode)
 {
@@ -49,6 +49,10 @@ int main()
             clean_input_buffer();
 
             char* str1 = get_input(1);
+            if (get_error() != 0)
+            {
+                put_error();
+            }
             char* str2 = get_input(1);
             
             Lnf a = get_lnf(str1, type);
@@ -71,18 +75,12 @@ int main()
 
             dif_add lnf = set_for_dif_add(a.lnf, b.lnf, type, a.size, b.size);
 
-            void* result  = lnf.add_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
+            void* result  = lnf.calculations.add_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
 
             char* output = output_lnf(result, result_size(a.size, b.size), type);
 
             printf("%s\n", output);
 
-            free(result);
-            free(output);
-            free(str1);
-            free(str2);
-            free(a.lnf);
-            free(b.lnf);
             map(free, 6, result, output, str1, str2, a.lnf, b.lnf);
         }
         else if (choise == '2')
@@ -99,7 +97,7 @@ int main()
 
             dif_add lnf = set_for_dif_add(a.lnf, b.lnf, type, a.size, b.size);
 
-            void* result  = lnf.dif_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
+            void* result  = lnf.calculations.dif_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
 
             char* output = output_lnf(result, result_size(a.size, b.size), type);
 
@@ -126,7 +124,7 @@ int main()
 
             mul_calc lnf = set_for_mul_calc(a.lnf, b, type, a.size);
 
-            void* result = lnf.mul_lnf(lnf.lnf, lnf.vrlbs, lnf.size);
+            void* result = lnf.calculations.mul_lnf(lnf.lnf, lnf.vrlbs, lnf.size);
 
             char* output = output_lnf(result, a.size, type);
 
@@ -153,7 +151,7 @@ int main()
 
             mul_calc lnf = set_for_mul_calc(a.lnf, b.lnf, type, a.size);
 
-            void* result = lnf.calc_lnf(lnf.lnf, lnf.vrlbs, lnf.size);
+            void* result = lnf.calculations.calc_lnf(lnf.lnf, lnf.vrlbs, lnf.size);
 
             char* output = output_num(result, type);
 

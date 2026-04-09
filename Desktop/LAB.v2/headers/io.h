@@ -13,20 +13,17 @@ typedef struct
     int size;
 }Lnf;
 
-#define NUM_ERROR (Lnf){NULL, -1}
-#define MEMORY_ERROR (Lnf){NULL, -2}
-#define TYPE_ERROR (Lnf){NULL, -3}
-
 typedef struct 
 {
     unsigned len;
     int count;
 }C_info;
 
+#define ERRO (Lnf){NULL, 0}
 
 void clean_input_buffer();
 
-int map(void func(void*), int count, ...);
+void map(void func(void*), int count, ...);
 C_info check_cmplx(char* str);
 int check_float(char* str);
 int get_cmplx(char* str, Complex* num);
@@ -37,6 +34,6 @@ char* output_lnf(void* lnf, unsigned size, char type);
 Lnf get_lnf(char* str, char type);
 void* get_factor(char* str, char type);
 char* output_num(void* num, char type);
-char* error_massage(int err_code);
+char* error_massage();
 
 #endif

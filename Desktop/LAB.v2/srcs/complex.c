@@ -1,11 +1,5 @@
 #include "complex.h"
 
-int err_code(int code)
-{
-
-}
-
-
 Complex add_cmplx(Complex a, Complex b)
 {
     Complex result;

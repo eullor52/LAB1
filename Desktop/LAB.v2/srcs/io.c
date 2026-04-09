@@ -1,11 +1,6 @@
 #include "io.h"
 #include <stdio.h>
-
-int error_treaker;
-
-#define NUM_ERROR (Lnf){NULL, 201}
-#define MEMORY_ERROR (Lnf){NULL, 202}
-#define TYPE_ERROR (Lnf){NULL, 203}
+#include "globals.h"
 
 void map(void func(void*), int count, ...)
 {
@@ -123,6 +118,8 @@ char* cmplx_lnf_output(Complex* lnf, unsigned size)
 {
     char* buffer = malloc(sizeof(char) * (MAX_NUM_LEN * 2 + 3) * size);
 
+    if(!buffer) return NULL;
+
     int  p = cmplx_output(buffer, lnf[0]);
 
     if (p != 0)
@@ -155,6 +152,9 @@ char* cmplx_lnf_output(Complex* lnf, unsigned size)
 char* flt_lnf_output(float* lnf, unsigned size)
 {
     char* buffer = malloc(sizeof(char) * MAX_NUM_LEN * size);
+
+    if (!buffer) return NULL;
+
     char tmp[100];
     int p = 0;
 
@@ -208,14 +208,31 @@ char* output_lnf(void* lnf, unsigned size, char type)
     if (type == 'c')
     {
         Complex* c_lnf = (Complex*)lnf;
-        return cmplx_lnf_output(c_lnf, size);
+        char* result = cmplx_lnf_output(c_lnf, size);
+        if (!result) 
+        {
+            set_error(MEMORY_ERROR);
+            return NULL;
+        }
+        else return result;
+
     }
     else if (type == 'f')
     {
         float* f_lnf = (float*)lnf;
-        return flt_lnf_output(f_lnf, size);
+        char result  = flt_lnf_output(f_lnf, size);
+        if (!result)
+        {
+            set_error(MEMORY_ERROR);
+            return NULL;
+        }
+        else return result;
     }
-    else return NULL;
+    else
+    {
+        set_error(INVAL_TYPE);
+        return NULL;
+    }
 }
 
 Lnf get_lnf(char* str, char type)
@@ -236,14 +253,18 @@ Lnf get_lnf(char* str, char type)
             if (tmp.count == 0) 
             {
                 if (lnf) free(lnf);
-                return NUM_ERROR;
+                set_error(INVAL_INPUT_STR);
+                return ERRO;
+                
             }
 
             Complex* p = realloc(lnf, sizeof(Complex) * (k + 1));
             if (!p) 
             {
                 if (lnf) free(lnf);
-                return MEMORY_ERROR;
+                set_error(MEMORY_ERROR);
+                return ERRO;
+                
             }
             lnf = p;
 
@@ -254,7 +275,8 @@ Lnf get_lnf(char* str, char type)
                 if (sscanf(str + i, "%f%f*i", &real, &im) != 2) 
                 {
                     if (lnf) free(lnf);
-                    return NUM_ERROR;
+                    set_error(INVAL_INPUT_STR);
+                    return ERRO;
                 }
                 lnf[k].Im = im;
                 lnf[k].Re = real;
@@ -265,7 +287,8 @@ Lnf get_lnf(char* str, char type)
                 if (sscanf(str + i, "%f", &real) != 1) 
                 {
                     if (lnf) free(lnf);
-                    return NUM_ERROR;
+                    set_error(INVAL_INPUT_STR);
+                    return ERRO;
                 }
                 lnf[k].Im = 0;
                 lnf[k].Re = real;
@@ -276,7 +299,8 @@ Lnf get_lnf(char* str, char type)
                 if (sscanf(str + i, "%f*i", &im) != 1)
                 {
                     if (lnf) free(lnf);
-                    return NUM_ERROR;
+                    set_error(INVAL_INPUT_STR);
+                    return ERRO;
                 }
                 lnf[k].Im = im;
                 lnf[k].Re = 0;
@@ -302,15 +326,16 @@ Lnf get_lnf(char* str, char type)
 
             if (sscanf(str + i, "%f", &tmp) != 1) 
             {
-                if (lnf) free(lnf);
-                return NUM_ERROR;
+                set_error(INVAL_INPUT_STR);
+                return ERRO;
             }
 
             float* p = realloc(lnf, sizeof(float) * (k+1));
             if (!p) 
             {
                 if (lnf) free(lnf);
-                return MEMORY_ERROR;
+                set_error(MEMORY_ERROR);
+                return ERRO;
             }
             lnf = p;
 
@@ -321,7 +346,11 @@ Lnf get_lnf(char* str, char type)
         result.lnf = (void*)lnf;
         result.size = k;
     }
-    else return TYPE_ERROR;
+    else
+    {
+        set_error(INVAL_TYPE);
+        return ERRO;
+    }
     return result;
 }
 
@@ -330,12 +359,23 @@ void* get_factor(char* str, char type)
     if (type == 'c')
     {
         Complex* result = malloc(sizeof(Complex));
+        if (!result)
+        {
+            set_error(MEMORY_ERROR);
+            return NULL;
+        }
+
         result->Im = 0;
         result->Re = 0;
 
         C_info c = check_cmplx(str);
 
-        if (c.count == 0) return NULL;
+        if (c.count == 0)
+        {
+            free(result);
+            set_error(INVAL_INPUT_STR);
+            return NULL;
+        }
 
         if (c.count == 2) sscanf(str, "%f%f*i", &result->Re, &result->Im);
         else if (c.count == 1) sscanf(str, "%f", &result->Re);
@@ -347,7 +387,11 @@ void* get_factor(char* str, char type)
     {
         float* result = malloc(sizeof(float));
         
-        if (check_float(str) <= 0) return NULL;
+        if (check_float(str) <= 0)
+        {
+            set_error(INVAL_INPUT_STR);
+            return NULL;
+        }
 
         sscanf(str, "%f", result);
 
@@ -362,14 +406,22 @@ char* output_num(void* num, char type)
     {
         char* result = malloc(sizeof(char)* (MAX_NUM_LEN * 2 + 5));
 
-        if (!result) return NULL;
+        if (!result) 
+        {
+            set_error(MEMORY_ERROR);
+            return NULL;
+        }
 
         Complex* c_num = (Complex*)num;
 
         int i = cmplx_output(result, *c_num);
 
-        if ( !i ) return NULL;
-
+        if ( !i ) 
+        {
+            set_error(OUTPUT_ERROR);
+            free(result);
+            return NULL;
+        }
         result[i] = 0;
 
         return result;
@@ -378,23 +430,59 @@ char* output_num(void* num, char type)
     {
         char* result = malloc(sizeof(char) * MAX_NUM_LEN);
 
+        if (!result) 
+        {
+            set_error(MEMORY_ERROR);
+            return NULL;
+        }
+
         float* f_num = (float*)num;
 
         int i = sprintf(result, "%.2f", *f_num);
 
-        if ( !i ) return NULL;
-
+        if ( !i ) 
+        {
+            set_error(OUTPUT_ERROR);
+            free(result);
+            return NULL;
+        }
         result[i] = 0;
 
         return result;
     }
-    else return NULL;
+    else 
+    {
+        set_error(INVAL_TYPE);
+        return NULL;
+    }
 }
 
-char* error_massage(int err_code)
+char* error_massage()
 {
+    enum error err_code = get_error();
+    const char massage;
+    
     switch(err_code)
     {
-        case 1:
+        case NO_ERROR:
+            const char massage1 = "Неизвестная ошибка.";
+            return massage1;
+        case MEMORY_ERROR:
+            const char massage2 = "Ошибка выделения памяти.";
+            return massage2;
+        case INVAL_TYPE:
+            const char massage3 = "Ошибка: неизвестный тип.";
+            return massage3;
+        case UNDEF_LNF_ARGS:
+            const char massage4 = "Ошибка: неверные параметры.";
+            return massage4;
+        case INVAL_INPUT_STR:
+            const char massage5 = "Ошибка: неверная строка ввода.";
+            return massage5;
+        case OUTPUT_ERROR:
+            const char massage6 = "Ошибка в работе функций stder.";
+            return massage6;
+        default:
+            return NULL;
     }
 }

@@ -1,5 +1,6 @@
-#ifndef OPERATIONC_H
-#define OPERATIONC_H
+#ifndef OPERATIONS_H
+#define OPERATIONS_H
+
 
 unsigned result_size(unsigned a, unsigned b);
 
