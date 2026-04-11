@@ -9,7 +9,7 @@ dif_add set_for_dif_add(void* a, void* b, char type, unsigned size_a, unsigned s
 
     if (!a || !b || !size_a || !size_b) 
     {
-        set_error(UNDEF_LNF_ARGS);
+        set_error(INVAL_LNF_PARAM);
         return lnf;
     }
 
@@ -41,7 +41,7 @@ mul_calc set_for_mul_calc(void* lnf, void* vrlbs, char type, unsigned size)
 
     if (!lnf || !vrlbs || !size) 
     {
-        set_error(UNDEF_LNF_ARGS);
+        set_error(INVAL_LNF_PARAM);
         return result;
     }
 

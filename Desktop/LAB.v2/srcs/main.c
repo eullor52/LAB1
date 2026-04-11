@@ -11,8 +11,13 @@ unsigned result_size(unsigned a, unsigned b);
 char* get_input(int mode)
 {
     if (mode == 1) puts("Коэффициенты через пробел:");
-    else if(mode == 2) puts("множитель:");
-    else puts("Значения переменных через пробел:");
+    else if (mode == 2) puts("Mножитель:");
+    else if (mode == 3) puts("Значения переменных через пробел:");
+    else 
+    {
+        set_error(INVAL_INPUT_TYPE);
+        return NULL;
+    }
     char* buffer = malloc(sizeof(char));
     int i = 0;
     buffer[i] = getchar();
@@ -22,8 +27,9 @@ char* get_input(int mode)
         char* p = realloc(buffer, sizeof(char) * (i + 1));
         if (!p) 
         {
+            set_error(MEMORY_ERROR);
             free(buffer);
-            return 0;
+            return NULL;
         }
         buffer = p;
         buffer[i] = getchar();
@@ -37,6 +43,7 @@ int main()
 {
     for(;;)
     {
+        set_error(NO_ERROR);
         char choise = 0, type;
         puts("Выберите действие:\n   1) - Сложение\n   2) - Вычитание\n   3) - Умножение\n   4) - Вычисление");
         choise = getchar();
@@ -48,36 +55,67 @@ int main()
             char type = getchar();
             clean_input_buffer();
 
-            char* str1 = get_input(1);
-            if (get_error() != 0)
+            char* str1 = get_input(4);
+            if (!str1)
             {
-                put_error();
+                puts(error_massage());
+                clean_input_buffer();
+                continue;
             }
+
             char* str2 = get_input(1);
+            if (!str2)
+            {
+                free(str1);
+                puts(error_massage());
+                clean_input_buffer();
+                continue;
+            }
             
             Lnf a = get_lnf(str1, type);
             if (!a.lnf)
             {
-                char* str = error_massage(a.size);
-                printf("%s", str);
-                free(str);
+                map(free, 2, str1, str2);
+                puts(error_massage());
+                clean_input_buffer();
                 continue;
             }
 
             Lnf b = get_lnf(str2, type);
-            if (!a.lnf)
+            if (!b.lnf)
             {
-                char* str = error_massage(a.size);
-                printf("%s", str);
-                free(str);
+                map(free, 3, str1, str2, a.lnf);
+                puts(error_massage());
+                clean_input_buffer();
                 continue;
             }
 
             dif_add lnf = set_for_dif_add(a.lnf, b.lnf, type, a.size, b.size);
 
+            if (get_error() != NO_ERROR)
+            {
+                map(free, 4, str1, str2, a.lnf, b.lnf);
+                puts(error_massage());
+                clean_input_buffer();
+                continue;
+            }
+
             void* result  = lnf.calculations.add_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
+            if (!result)
+            {
+                map(free, 4, str1, str2, a.lnf, b.lnf);
+                puts(error_massage());
+                clean_input_buffer();
+                continue;
+            }
 
             char* output = output_lnf(result, result_size(a.size, b.size), type);
+            {
+                map(free, 4, str1, str2, a.lnf, b.lnf, result);
+                puts(error_massage());
+                clean_input_buffer();
+                continue;
+            }
 
             printf("%s\n", output);
 

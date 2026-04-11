@@ -1,14 +1,16 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
+#include "lineform.h"
 
 enum error
 {
     NO_ERROR,
     MEMORY_ERROR,
     INVAL_TYPE,
-    UNDEF_LNF_ARGS,
+    INVAL_LNF_PARAM,
     INVAL_INPUT_STR,
-    OUTPUT_ERROR
+    OUTPUT_ERROR,
+    INVAL_INPUT_TYPE
 };
 
 extern enum error error_info;

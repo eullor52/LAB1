@@ -13,7 +13,7 @@ void* get_cmplx_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 {
     if ( !(a && b && size_a && size_b))
     {
-        set_error(101);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
     unsigned r_size = result_size(size_a, size_b);
@@ -21,7 +21,7 @@ void* get_cmplx_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 
     if (!result)
     {
-        set_error(102);
+        set_error(MEMORY_ERROR);
         return NULL;
     }
 
@@ -45,7 +45,7 @@ void* get_flt_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 {
     if ( !(a && b && size_a && size_b))
     {
-        set_error(111);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
 
@@ -54,7 +54,7 @@ void* get_flt_sum(void* a, void* b, unsigned size_a, unsigned size_b)
 
     if (!result)
     {
-        set_error(112);
+        set_error(MEMORY_ERROR);
     }
 
     float *left = (float*)a, *right = (float*)b;
@@ -77,7 +77,7 @@ void* get_cmplx_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 {
     if ( !(a && b && size_a && size_b))
     {
-        set_error(121);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
 
@@ -86,7 +86,7 @@ void* get_cmplx_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 
     if (!result)
     {
-        set_error(122);
+        set_error(MEMORY_ERROR);
         return NULL;
     }
 
@@ -115,7 +115,7 @@ void* get_flt_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 {
     if ( !(a && b && size_a && size_b))
     {
-        set_error(131);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
 
@@ -124,7 +124,7 @@ void* get_flt_dif(void* a, void* b, unsigned size_a, unsigned size_b)
 
     if (!result)
     {
-        set_error(132);
+        set_error(MEMORY_ERROR);
         return NULL;
     }
 
@@ -148,7 +148,7 @@ void* get_cmplx_mul(void* a, void* b, unsigned size)
 {
     if (!(a && b && size))
     {
-        set_error(141);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
 
@@ -156,7 +156,7 @@ void* get_cmplx_mul(void* a, void* b, unsigned size)
 
     if (!result)
     {
-        set_error(142);
+        set_error(MEMORY_ERROR);
         return NULL;
     }
 
@@ -171,7 +171,7 @@ void* get_flt_mul(void* a, void* b, unsigned size)
 {
     if (!(a && b && size))
     {
-        set_error(141);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
 
@@ -179,7 +179,7 @@ void* get_flt_mul(void* a, void* b, unsigned size)
 
     if(!result)
     {
-        set_error(152);
+        set_error(MEMORY_ERROR);
         return NULL;
     }
 
@@ -194,7 +194,7 @@ void* get_cmplx_calc(void* a, void* b, unsigned size)
 {
     if (!(a && b && size))
     {
-        set_error(161);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
 
@@ -202,7 +202,7 @@ void* get_cmplx_calc(void* a, void* b, unsigned size)
 
     if (!result)
     {
-        set_error(162);
+        set_error(MEMORY_ERROR);
         return NULL;
     }
     Complex *lnf  = (Complex*)a, *factors = (Complex*)b;
@@ -221,7 +221,7 @@ void* get_flt_calc(void* a, void* b, unsigned size)
 {
     if (!(a && b && size))
     {
-        set_error(171);
+        set_error(INVAL_LNF_PARAM);
         return NULL;
     }
 
@@ -229,7 +229,7 @@ void* get_flt_calc(void* a, void* b, unsigned size)
 
     if (!result)
     {
-        set_error(172);
+        set_error(MEMORY_ERROR);
         return NULL;
     }
     

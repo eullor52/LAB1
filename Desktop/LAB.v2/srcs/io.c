@@ -153,7 +153,7 @@ char* flt_lnf_output(float* lnf, unsigned size)
 {
     char* buffer = malloc(sizeof(char) * MAX_NUM_LEN * size);
 
-    if (!buffer) return NULL;
+    if (!buffer)  return NULL;
 
     char tmp[100];
     int p = 0;
@@ -473,7 +473,7 @@ char* error_massage()
         case INVAL_TYPE:
             const char massage3 = "Ошибка: неизвестный тип.";
             return massage3;
-        case UNDEF_LNF_ARGS:
+        case INVAL_LNF_PARAM:
             const char massage4 = "Ошибка: неверные параметры.";
             return massage4;
         case INVAL_INPUT_STR:
@@ -482,6 +482,9 @@ char* error_massage()
         case OUTPUT_ERROR:
             const char massage6 = "Ошибка в работе функций stder.";
             return massage6;
+        case INVAL_INPUT_TYPE:
+            const char massage7 = "Неизвестный формат вввода.";
+            return massage7;
         default:
             return NULL;
     }
