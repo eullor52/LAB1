@@ -103,8 +103,8 @@ void* get_cmplx_dif(void* a, void* b, unsigned size_a, unsigned size_b)
         for (int i = size_a; i < size_b; i++)
         {
             result[i] = right[i];
-            result->Im *= -1;
-            result->Re *= -1;
+            result[i].Im *= -1;
+            result[i].Re *= -1;
         }
     }
 

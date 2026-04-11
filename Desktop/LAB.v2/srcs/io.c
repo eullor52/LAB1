@@ -13,7 +13,7 @@ void map(void func(void*), int count, ...)
 void clean_input_buffer()
 {
     int c;
-    while(c = getchar() != '\n' && c != EOF);
+    while ((c = getchar()) != '\n' && c != EOF);
 }
 
 int check_float(char* str)
@@ -220,7 +220,7 @@ char* output_lnf(void* lnf, unsigned size, char type)
     else if (type == 'f')
     {
         float* f_lnf = (float*)lnf;
-        char result  = flt_lnf_output(f_lnf, size);
+        char* result = flt_lnf_output(f_lnf, size);   // исправлено: char* result
         if (!result)
         {
             set_error(MEMORY_ERROR);
@@ -247,7 +247,8 @@ Lnf get_lnf(char* str, char type)
         int i = 0;
         while (str[i] != '\n' && str[i] != 0)
         {
-            if (i) ++i;
+            // пропуск пробелов
+            while (str[i] == ' ') ++i;
 
             C_info tmp = check_cmplx(str + i);
             if (tmp.count == 0) 
@@ -255,7 +256,6 @@ Lnf get_lnf(char* str, char type)
                 if (lnf) free(lnf);
                 set_error(INVAL_INPUT_STR);
                 return ERRO;
-                
             }
 
             Complex* p = realloc(lnf, sizeof(Complex) * (k + 1));
@@ -264,7 +264,6 @@ Lnf get_lnf(char* str, char type)
                 if (lnf) free(lnf);
                 set_error(MEMORY_ERROR);
                 return ERRO;
-                
             }
             lnf = p;
 
@@ -320,7 +319,7 @@ Lnf get_lnf(char* str, char type)
 
         while (str[i] != '\n' && str[i] != 0)
         {
-            if (i) ++i;
+            while (str[i] == ' ') ++i;
             float tmp;
             int count = check_float(str+i);
 
@@ -460,31 +459,23 @@ char* output_num(void* num, char type)
 char* error_massage()
 {
     enum error err_code = get_error();
-    const char massage;
     
     switch(err_code)
     {
         case NO_ERROR:
-            const char massage1 = "Неизвестная ошибка.";
-            return massage1;
+            return "Неизвестная ошибка.";
         case MEMORY_ERROR:
-            const char massage2 = "Ошибка выделения памяти.";
-            return massage2;
+            return "Ошибка выделения памяти.";
         case INVAL_TYPE:
-            const char massage3 = "Ошибка: неизвестный тип.";
-            return massage3;
+            return "Ошибка: неизвестный тип.";
         case INVAL_LNF_PARAM:
-            const char massage4 = "Ошибка: неверные параметры.";
-            return massage4;
+            return "Ошибка: неверные параметры.";
         case INVAL_INPUT_STR:
-            const char massage5 = "Ошибка: неверная строка ввода.";
-            return massage5;
+            return "Ошибка: неверная строка ввода.";
         case OUTPUT_ERROR:
-            const char massage6 = "Ошибка в работе функций stder.";
-            return massage6;
+            return "Ошибка в работе функций stdio.";
         case INVAL_INPUT_TYPE:
-            const char massage7 = "Неизвестный формат вввода.";
-            return massage7;
+            return "Неизвестный формат вввода.";
         default:
             return NULL;
     }

@@ -2,16 +2,13 @@
 #include "io.h"
 #include "lineform.h"
 #include <stdlib.h>
-#include <conio.h>
 #include "globals.h"
 
-
-unsigned result_size(unsigned a, unsigned b);
 
 char* get_input(int mode)
 {
     if (mode == 1) puts("Коэффициенты через пробел:");
-    else if (mode == 2) puts("Mножитель:");
+    else if (mode == 2) puts("Множитель:");
     else if (mode == 3) puts("Значения переменных через пробел:");
     else 
     {
@@ -52,14 +49,13 @@ int main()
         if (choise == '1')
         {
             puts("Тип значений:");
-            char type = getchar();
+            type = getchar();
             clean_input_buffer();
 
-            char* str1 = get_input(4);
+            char* str1 = get_input(1);
             if (!str1)
             {
                 puts(error_massage());
-                clean_input_buffer();
                 continue;
             }
 
@@ -68,25 +64,25 @@ int main()
             {
                 free(str1);
                 puts(error_massage());
-                clean_input_buffer();
                 continue;
             }
             
             Lnf a = get_lnf(str1, type);
             if (!a.lnf)
             {
-                map(free, 2, str1, str2);
+                free(str1);
+                free(str2);
                 puts(error_massage());
-                clean_input_buffer();
                 continue;
             }
 
             Lnf b = get_lnf(str2, type);
             if (!b.lnf)
             {
-                map(free, 3, str1, str2, a.lnf);
+                free(str1);
+                free(str2);
+                free(a.lnf);
                 puts(error_massage());
-                clean_input_buffer();
                 continue;
             }
 
@@ -94,37 +90,50 @@ int main()
 
             if (get_error() != NO_ERROR)
             {
-                map(free, 4, str1, str2, a.lnf, b.lnf);
+                free(str1);
+                free(str2);
+                free(a.lnf);
+                free(b.lnf);
                 puts(error_massage());
-                clean_input_buffer();
                 continue;
             }
 
-            void* result  = lnf.calculations.add_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
+            void* result = lnf.calculations.add_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
             if (!result)
             {
-                map(free, 4, str1, str2, a.lnf, b.lnf);
+                free(str1);
+                free(str2);
+                free(a.lnf);
+                free(b.lnf);
                 puts(error_massage());
-                clean_input_buffer();
                 continue;
             }
 
             char* output = output_lnf(result, result_size(a.size, b.size), type);
+            if (!output)
             {
-                map(free, 4, str1, str2, a.lnf, b.lnf, result);
+                free(str1);
+                free(str2);
+                free(a.lnf);
+                free(b.lnf);
+                free(result);
                 puts(error_massage());
-                clean_input_buffer();
                 continue;
             }
 
             printf("%s\n", output);
 
-            map(free, 6, result, output, str1, str2, a.lnf, b.lnf);
+            free(str1);
+            free(str2);
+            free(a.lnf);
+            free(b.lnf);
+            free(result);
+            free(output);
         }
         else if (choise == '2')
         {
             puts("Тип значений:");
-            char type = getchar();
+            type = getchar();
             clean_input_buffer();
 
             char* str1 = get_input(1);
@@ -135,7 +144,7 @@ int main()
 
             dif_add lnf = set_for_dif_add(a.lnf, b.lnf, type, a.size, b.size);
 
-            void* result  = lnf.calculations.dif_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
+            void* result = lnf.calculations.dif_lnf(lnf.a, lnf.b, lnf.size_a, lnf.size_b);
 
             char* output = output_lnf(result, result_size(a.size, b.size), type);
 
@@ -151,7 +160,7 @@ int main()
         else if (choise == '3')
         {
             puts("Тип значений:");
-            char type = getchar();
+            type = getchar();
             clean_input_buffer();
 
             char* str1 = get_input(1);
@@ -178,7 +187,7 @@ int main()
         else if (choise == '4')
         {
             puts("Тип значений:");
-            char type = getchar();
+            type = getchar();
             clean_input_buffer();
 
             char* str1 = get_input(1);
@@ -208,5 +217,4 @@ int main()
             continue;
         }
     }
-
 }
