@@ -19,7 +19,7 @@ Complex dif_cmplx(Complex a, Complex b)
 Complex mul_cmplx(Complex a, Complex b)
 {
     Complex result;
-    result.Re = a.Re * b.Re + a.Im * b.Im;
+    result.Re = a.Re * b.Re - a.Im * b.Im;
     result.Im = a.Re * b.Im + a.Im * b.Re;
     return result;
 }

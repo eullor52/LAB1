@@ -42,7 +42,7 @@ int main()
     {
         set_error(NO_ERROR);
         char choise = 0, type;
-        puts("Выберите действие:\n   1) - Сложение\n   2) - Вычитание\n   3) - Умножение\n   4) - Вычисление");
+        puts("Выберите действие:\n   1) - Сложение\n   2) - Вычитание\n   3) - Умножение\n   4) - Вычисление\n   5) - Выход");
         choise = getchar();
         clean_input_buffer();
 
@@ -121,7 +121,7 @@ int main()
                 continue;
             }
 
-            printf("%s\n", output);
+            printf("Результат: %s\n", output);
 
             free(str1);
             free(str2);
@@ -148,7 +148,7 @@ int main()
 
             char* output = output_lnf(result, result_size(a.size, b.size), type);
 
-            printf("%s\n", output);
+            printf("Результат: %s\n", output);
 
             free(result);
             free(output);
@@ -175,7 +175,7 @@ int main()
 
             char* output = output_lnf(result, a.size, type);
 
-            printf("%s\n", output);
+            printf("Результат: %s\n", output);
 
             free(result);
             free(output);
@@ -202,7 +202,7 @@ int main()
 
             char* output = output_num(result, type);
 
-            printf("%s\n", output);
+            printf("Результат: %s\n", output);
 
             free(result);
             free(output);
@@ -210,6 +210,11 @@ int main()
             free(str2);
             free(a.lnf);
             free(b.lnf);
+        }
+        else if(choise == '5')
+        {
+            puts("Выполнение завершено.");
+            return 0;
         }
         else
         {

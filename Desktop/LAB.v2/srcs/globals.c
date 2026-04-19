@@ -4,7 +4,6 @@
 
 enum error error_info = NO_ERROR;
 
-
 Type_info1 func1_cmplx = {
     .add_lnf = get_cmplx_sum,
     .dif_lnf = get_cmplx_dif
