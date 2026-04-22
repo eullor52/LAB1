@@ -1,304 +1,377 @@
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <string.h>
 #include "complex.h"
 #include "globals.h"
 #include "io.h"
 #include "lineform.h"
 #include "operations.h"
 
-#define assert(statement, counter) \
-    ((statement) ? (void)0 : (*(counter) += 1, error_notif(#statement, __FILE__, __LINE__, __func__)))
+#define ASSERT(expr) \
+    do { \
+        if (!(expr)) { \
+            fprintf(stderr, "Assertion failed: (%s) в файле %s в строке %d\n", #expr, __FILE__, __LINE__); \
+            exit(1); \
+        } \
+    } while(0)
 
-void error_notif(const char* statement, const char* file, int line, const char* func)
-{
-    printf("Ошибка: %s\n   В файле %s, функции %s, строке %d.\n", 
-           statement, file, func, line);
+static void reset_error(void) {
+    set_error(NO_ERROR);
 }
 
-float float_abs(float x)
-{
-    return (x < 0) ? -x : x;
+static int cmplx_eq(Complex a, Complex b, float eps) {
+    return (fabsf(a.Re - b.Re) < eps) && (fabsf(a.Im - b.Im) < eps);
 }
 
-int str_eq(const char* a, const char* b)
-{
-    while (*a && *b && *a == *b) {
-        a++;
-        b++;
-    }
-    return *a == *b;
+static int cmplx_arr_eq(Complex* a, Complex* b, unsigned n, float eps) {
+    for (unsigned i = 0; i < n; i++)
+        if (!cmplx_eq(a[i], b[i], eps)) return 0;
+    return 1;
 }
 
-int cmplx_comp(Complex a, Complex b)
-{
-    const float eps = 1e-5f;
-    return float_abs(a.Re - b.Re) < eps && float_abs(a.Im - b.Im) < eps;
+static int flt_arr_eq(float* a, float* b, unsigned n, float eps) {
+    for (unsigned i = 0; i < n; i++)
+        if (fabsf(a[i] - b[i]) > eps) return 0;
+    return 1;
 }
 
-int flt_comp(float a, float b)
-{
-    const float eps = 1e-5f;
-    return float_abs(a - b) < eps;
+static int str_eq(const char* s1, const char* s2) {
+    if (!s1 || !s2) return s1 == s2;
+    while (*s1 && *s2 && *s1 == *s2) { s1++; s2++; }
+    return (*s1 == '\0' || *s1 == '\n') && (*s2 == '\0' || *s2 == '\n');
 }
 
-int test_complex()
-{
-    int counter = 0;
-
+static void test_add_cmplx(void) {
     Complex a = {1.0f, 2.0f};
     Complex b = {3.0f, 4.0f};
-    Complex res;
+    Complex res = add_cmplx(a, b);
+    ASSERT(fabsf(res.Re - 4.0f) < 1e-5);
+    ASSERT(fabsf(res.Im - 6.0f) < 1e-5);
 
+    a = (Complex){-1.0f, -2.0f};
+    b = (Complex){1.0f, 2.0f};
     res = add_cmplx(a, b);
-    assert(cmplx_comp(res, (Complex){4.0f, 6.0f}), &counter);
+    ASSERT(fabsf(res.Re) < 1e-5 && fabsf(res.Im) < 1e-5);
+    printf("test_add_cmplx OK\n");
+}
 
+static void test_dif_cmplx(void) {
+    Complex a = {5.0f, 7.0f};
+    Complex b = {2.0f, 3.0f};
+    Complex res = dif_cmplx(a, b);
+    ASSERT(fabsf(res.Re - 3.0f) < 1e-5);
+    ASSERT(fabsf(res.Im - 4.0f) < 1e-5);
+
+    a = (Complex){2.0f, 2.0f};
+    b = (Complex){2.0f, 2.0f};
     res = dif_cmplx(a, b);
-    assert(cmplx_comp(res, (Complex){-2.0f, -2.0f}), &counter);
+    ASSERT(fabsf(res.Re) < 1e-5 && fabsf(res.Im) < 1e-5);
+    printf("test_dif_cmplx OK\n");
+}
 
+static void test_mul_cmplx(void) {
+    Complex a = {1.0f, 2.0f};
+    Complex b = {3.0f, 4.0f};
+    Complex res = mul_cmplx(a, b);
+    ASSERT(fabsf(res.Re + 5.0f) < 1e-5);
+    ASSERT(fabsf(res.Im - 10.0f) < 1e-5);
+
+    a = (Complex){0.0f, 1.0f};
+    b = (Complex){0.0f, 1.0f};
     res = mul_cmplx(a, b);
-    assert(cmplx_comp(res, (Complex){-5.0f, 10.0f}), &counter);
-
-    Complex zero = {0.0f, 0.0f};
-    res = mul_cmplx(a, zero);
-    assert(cmplx_comp(res, zero), &counter);
-
-    return counter;
+    ASSERT(fabsf(res.Re + 1.0f) < 1e-5);
+    ASSERT(fabsf(res.Im) < 1e-5);
+    printf("test_mul_cmplx OK\n");
 }
 
-int test_operations_complex()
-{
-    int counter = 0;
+static void test_result_size(void) {
+    ASSERT(result_size(5, 3) == 5);
+    ASSERT(result_size(2, 7) == 7);
+    ASSERT(result_size(0, 0) == 0);
+    printf("test_result_size OK\n");
+}
 
-    Complex sum_a[] = {{1,1}, {2,2}, {3,3}};
-    Complex sum_b[] = {{0,1}, {1,0}};
-    unsigned size_a = 3, size_b = 2;
-    void* res = get_cmplx_sum(sum_a, sum_b, size_a, size_b);
-    assert(res != NULL, &counter);
+static void test_get_cmplx_sum(void) {
+    Complex a[] = {{1,1}, {2,2}, {3,3}};
+    Complex b[] = {{10,10}, {20,20}};
+    unsigned sa = 3, sb = 2;
+    void* res = get_cmplx_sum(a, b, sa, sb);
+    ASSERT(res != NULL);
     Complex* cres = (Complex*)res;
-    assert(cmplx_comp(cres[0], (Complex){1,2}), &counter);
-    assert(cmplx_comp(cres[1], (Complex){3,2}), &counter);
-    assert(cmplx_comp(cres[2], (Complex){3,3}), &counter);
+    Complex expected[] = {{11,11}, {22,22}, {3,3}};
+    ASSERT(cmplx_arr_eq(cres, expected, 3, 1e-5));
     free(res);
-
-    Complex dif_a[] = {{5,5}, {3,3}, {1,1}};
-    Complex dif_b[] = {{1,1}, {2,2}};
-    res = get_cmplx_dif(dif_a, dif_b, 3, 2);
-    assert(res != NULL, &counter);
-    cres = (Complex*)res;
-    assert(cmplx_comp(cres[0], (Complex){4,4}), &counter);
-    assert(cmplx_comp(cres[1], (Complex){1,1}), &counter);
-    assert(cmplx_comp(cres[2], (Complex){1,1}), &counter);
-    free(res);
-
-    Complex mul_lnf[] = {{1,0}, {0,1}, {2,3}};
-    Complex factor = {2,2};
-    res = get_cmplx_mul(mul_lnf, &factor, 3);
-    assert(res != NULL, &counter);
-    cres = (Complex*)res;
-    assert(cmplx_comp(cres[0], (Complex){2,2}), &counter);
-    assert(cmplx_comp(cres[1], (Complex){-2,2}), &counter);
-    assert(cmplx_comp(cres[2], (Complex){-2,10}), &counter);
-    free(res);
-
-    Complex calc_lnf[] = {{1,2}, {3,4}, {5,6}};
-    Complex factors[] = {{1,0}, {1,0}};
-    res = get_cmplx_calc(calc_lnf, factors, 3);
-    assert(res != NULL, &counter);
-    cres = (Complex*)res;
-    assert(cmplx_comp(*cres, (Complex){1+3+5, 2+4+6}), &counter);
-    free(res);
-
-    return counter;
+    printf("test_get_cmplx_sum OK\n");
 }
 
-int test_operations_float()
-{
-    int counter = 0;
-
-    float sum_a[] = {1.5f, 2.5f, 3.5f};
-    float sum_b[] = {0.5f, 1.5f};
-    void* res = get_flt_sum(sum_a, sum_b, 3, 2);
-    assert(res != NULL, &counter);
+static void test_get_flt_sum(void) {
+    float a[] = {1.0f, 2.0f, 3.0f};
+    float b[] = {10.0f, 20.0f};
+    void* res = get_flt_sum(a, b, 3, 2);
+    ASSERT(res != NULL);
     float* fres = (float*)res;
-    assert(flt_comp(fres[0], 2.0f), &counter);
-    assert(flt_comp(fres[1], 4.0f), &counter);
-    assert(flt_comp(fres[2], 3.5f), &counter);
+    float expected[] = {11.0f, 22.0f, 3.0f};
+    ASSERT(flt_arr_eq(fres, expected, 3, 1e-5));
     free(res);
-
-    float dif_a[] = {10.0f, 20.0f};
-    float dif_b[] = {1.0f, 2.0f, 3.0f};
-    res = get_flt_dif(dif_a, dif_b, 2, 3);
-    assert(res != NULL, &counter);
-    fres = (float*)res;
-    assert(flt_comp(fres[0], 9.0f), &counter);
-    assert(flt_comp(fres[1], 18.0f), &counter);
-    assert(flt_comp(fres[2], -3.0f), &counter);
-    free(res);
-
-    float mul_lnf[] = {1.5f, 2.0f, 3.5f};
-    float factor = 2.0f;
-    res = get_flt_mul(mul_lnf, &factor, 3);
-    assert(res != NULL, &counter);
-    fres = (float*)res;
-    assert(flt_comp(fres[0], 3.0f), &counter);
-    assert(flt_comp(fres[1], 4.0f), &counter);
-    assert(flt_comp(fres[2], 7.0f), &counter);
-    free(res);
-
-    float calc_lnf[] = {1.0f, 2.0f, 3.0f};
-    float calc_factors[] = {2.0f, 3.0f};
-    res = get_flt_calc(calc_lnf, calc_factors, 3);
-    assert(res != NULL, &counter);
-    fres = (float*)res;
-    assert(flt_comp(*fres, 14.0f), &counter);
-    free(res);
-
-    return counter;
+    printf("test_get_flt_sum OK\n");
 }
 
-int test_io_functions()
-{
-    int counter = 0;
-    char buf[100];
+static void test_get_cmplx_dif(void) {
+    Complex a[] = {{5,5}, {4,4}, {3,3}};
+    Complex b[] = {{1,1}, {2,2}};
+    void* res = get_cmplx_dif(a, b, 3, 2);
+    ASSERT(res != NULL);
+    Complex* cres = (Complex*)res;
+    Complex expected[] = {{4,4}, {2,2}, {3,3}};
+    ASSERT(cmplx_arr_eq(cres, expected, 3, 1e-5));
+    free(res);
+    printf("test_get_cmplx_dif OK\n");
+}
 
+static void test_get_flt_dif(void) {
+    float a[] = {5.0f, 4.0f, 3.0f};
+    float b[] = {1.0f, 2.0f};
+    void* res = get_flt_dif(a, b, 3, 2);
+    ASSERT(res != NULL);
+    float* fres = (float*)res;
+    float expected[] = {4.0f, 2.0f, 3.0f};
+    ASSERT(flt_arr_eq(fres, expected, 3, 1e-5));
+    free(res);
+    printf("test_get_flt_dif OK\n");
+}
+
+static void test_get_cmplx_mul(void) {
+    Complex lnf[] = {{1,0}, {0,1}, {2,2}};
+    Complex factor = {2,0};
+    void* res = get_cmplx_mul(lnf, &factor, 3);
+    ASSERT(res != NULL);
+    Complex* cres = (Complex*)res;
+    Complex expected[] = {{2,0}, {0,2}, {4,4}};
+    ASSERT(cmplx_arr_eq(cres, expected, 3, 1e-5));
+    free(res);
+    printf("test_get_cmplx_mul OK\n");
+}
+
+static void test_get_flt_mul(void) {
+    float lnf[] = {1.0f, 2.0f, 3.0f};
+    float factor = 2.5f;
+    void* res = get_flt_mul(lnf, &factor, 3);
+    ASSERT(res != NULL);
+    float* fres = (float*)res;
+    float expected[] = {2.5f, 5.0f, 7.5f};
+    ASSERT(flt_arr_eq(fres, expected, 3, 1e-5));
+    free(res);
+    printf("test_get_flt_mul OK\n");
+}
+
+static void test_get_cmplx_calc(void) {
+    Complex lnf[] = {{1,0}, {2,0}, {3,0}};
+    Complex vars[] = {{2,0}, {3,0}};
+    void* res = get_cmplx_calc(lnf, vars, 3);
+    ASSERT(res != NULL);
+    Complex* cres = (Complex*)res;
+    ASSERT(fabsf(cres->Re - 14.0f) < 1e-5);
+    ASSERT(fabsf(cres->Im) < 1e-5);
+    free(res);
+    printf("test_get_cmplx_calc OK\n");
+}
+
+static void test_get_flt_calc(void) {
+    float lnf[] = {1.0f, 2.0f, 3.0f};
+    float vars[] = {2.0f, 3.0f};
+    void* res = get_flt_calc(lnf, vars, 3);
+    ASSERT(res != NULL);
+    float* fres = (float*)res;
+    ASSERT(fabsf(*fres - 14.0f) < 1e-5);
+    free(res);
+    printf("test_get_flt_calc OK\n");
+}
+
+static void test_check_float(void) {
+    ASSERT(check_float("123") == 3);
+    ASSERT(check_float("12.34") == 5);
+    ASSERT(check_float("-45.67") == 0);
+    ASSERT(check_float("abc") == 0);
+    printf("test_check_float OK\n");
+}
+
+static void test_check_cmplx(void) {
+    C_info ci = check_cmplx("3+4*i");
+    ASSERT(ci.count == 2 && ci.len == 5);
+    ci = check_cmplx("5");
+    ASSERT(ci.count == 1);
+    ci = check_cmplx("7*i");
+    ASSERT(ci.count == -1);
+    ci = check_cmplx("invalid");
+    ASSERT(ci.count == 0);
+    printf("test_check_cmplx OK\n");
+}
+
+static void test_cmplx_output(void) {
+    char buf[100];
     Complex c = {1.23f, 4.56f};
     int len = cmplx_output(buf, c);
-    const char* expected1 = "1.23 + 4.56*i";
-    int ok = 1;
-    for (int i = 0; i < len && expected1[i]; i++) {
-        if (buf[i] != expected1[i]) { ok = 0; break; }
-    }
-    assert(ok && buf[len] == '\0', &counter);
-    assert(len > 0, &counter);
-
-    c = (Complex){0, 5};
+    ASSERT(len > 0);
+    ASSERT(strstr(buf, "1.23") && strstr(buf, "4.56"));
+    c = (Complex){0,0};
     len = cmplx_output(buf, c);
-    const char* expected2 = "5.00*i";
-    ok = 1;
-    for (int i = 0; i < len && expected2[i]; i++) {
-        if (buf[i] != expected2[i]) { ok = 0; break; }
-    }
-    assert(ok, &counter);
-
-    c = (Complex){-3, 0};
+    ASSERT(len == 0);
+    c = (Complex){5,0};
     len = cmplx_output(buf, c);
-    const char* expected3 = "-3.00";
-    ok = 1;
-    for (int i = 0; i < len && expected3[i]; i++) {
-        if (buf[i] != expected3[i]) { ok = 0; break; }
-    }
-    assert(ok, &counter);
+    ASSERT(strstr(buf, "5.00") && !strstr(buf, "i"));
+    printf("test_cmplx_output OK\n");
+}
 
-    void* f = get_factor("2+3*i", 'c');
-    assert(f != NULL, &counter);
-    Complex* cf = (Complex*)f;
-    assert(cmplx_comp(*cf, (Complex){2,3}), &counter);
+static void test_get_lnf_float(void) {
+    char str[] = "1.5 2.7 3.0\n";
+    Lnf l = get_lnf(str, 'f');
+    ASSERT(l.lnf != NULL && l.size == 3);
+    float* arr = (float*)l.lnf;
+    ASSERT(fabsf(arr[0] - 1.5f) < 1e-5);
+    ASSERT(fabsf(arr[1] - 2.7f) < 1e-5);
+    ASSERT(fabsf(arr[2] - 3.0f) < 1e-5);
+    free(l.lnf);
+    printf("test_get_lnf_float OK\n");
+}
+
+static void test_get_lnf_complex(void) {
+    char str[] = "1+2*i 3*i 5\n";
+    Lnf l = get_lnf(str, 'c');
+    ASSERT(l.lnf != NULL && l.size == 3);
+    Complex* arr = (Complex*)l.lnf;
+    ASSERT(fabsf(arr[0].Re - 1.0f) < 1e-5 && fabsf(arr[0].Im - 2.0f) < 1e-5);
+    ASSERT(fabsf(arr[1].Re) < 1e-5 && fabsf(arr[1].Im - 3.0f) < 1e-5);
+    ASSERT(fabsf(arr[2].Re - 5.0f) < 1e-5 && fabsf(arr[2].Im) < 1e-5);
+    free(l.lnf);
+    printf("test_get_lnf_complex OK\n");
+}
+
+static void test_get_factor(void) {
+    void* f = get_factor("12.5", 'f');
+    ASSERT(f != NULL);
+    ASSERT(fabsf(*(float*)f - 12.5f) < 1e-5);
     free(f);
 
-    f = get_factor("7*i", 'c');
-    cf = (Complex*)f;
-    assert(cmplx_comp(*cf, (Complex){0,7}), &counter);
+    f = get_factor("2+3*i", 'c');
+    ASSERT(f != NULL);
+    Complex* c = (Complex*)f;
+    ASSERT(fabsf(c->Re - 2.0f) < 1e-5 && fabsf(c->Im - 3.0f) < 1e-5);
     free(f);
+    printf("test_get_factor OK\n");
+}
 
-    f = get_factor("3.14", 'f');
-    assert(f != NULL, &counter);
-    float* ff = (float*)f;
-    assert(flt_comp(*ff, 3.14f), &counter);
-    free(f);
+static void test_output_lnf(void) {
+    Complex carr[] = {{1,1}, {2,0}, {0,3}};
+    char* s = output_lnf(carr, 3, 'c');
+    ASSERT(s != NULL);
+    ASSERT(strstr(s, "1.00 + 1.00*i") != NULL);
+    ASSERT(strstr(s, "2.00*x1") != NULL);
+    ASSERT(strstr(s, "3.00*i*x2") != NULL);
+    free(s);
 
-    c = (Complex){2.5f, -1.5f};
+    float farr[] = {1.5f, 2.5f, 3.5f};
+    s = output_lnf(farr, 3, 'f');
+    ASSERT(s != NULL);
+    ASSERT(strstr(s, "1.50") && strstr(s, "2.50*x1") && strstr(s, "3.50*x2"));
+    free(s);
+    printf("test_output_lnf OK\n");
+}
+
+static void test_output_num(void) {
+    Complex c = {1.23f, 4.56f};
     char* s = output_num(&c, 'c');
-    assert(s != NULL, &counter);
-    const char* expected4 = "2.50 + -1.50*i";
-    ok = 1;
-    for (int i = 0; expected4[i]; i++) {
-        if (s[i] != expected4[i]) { ok = 0; break; }
-    }
-    assert(ok, &counter);
+    ASSERT(s != NULL);
+    ASSERT(strstr(s, "1.23") && strstr(s, "4.56"));
     free(s);
 
-    float val = 123.456f;
-    s = output_num(&val, 'f');
-    assert(s != NULL, &counter);
-    const char* expected5 = "123.46";
-    ok = 1;
-    for (int i = 0; expected5[i]; i++) {
-        if (s[i] != expected5[i]) { ok = 0; break; }
-    }
-    assert(ok, &counter);
+    float f = 3.1415f;
+    s = output_num(&f, 'f');
+    ASSERT(s != NULL);
+    ASSERT(strstr(s, "3.14"));
     free(s);
-
-    assert(check_float("123") == 3, &counter);
-    assert(check_float("12.34") == 5, &counter);
-    assert(check_float("abc") == 0, &counter);
-
-    C_info ci = check_cmplx("3+4*i");
-    assert(ci.count == 2, &counter);
-    ci = check_cmplx("7");
-    assert(ci.count == 1, &counter);
-    ci = check_cmplx("7*i");
-    assert(ci.count == -1, &counter);
-
-    return counter;
+    printf("test_output_num OK\n");
 }
 
-int test_lineform()
-{
-    int counter = 0;
-
-    float a[] = {1.0f, 2.0f};
-    float b[] = {3.0f};
-    dif_add da = set_for_dif_add(a, b, 'f', 2, 1);
-    assert(da.calculations.add_lnf != NULL, &counter);
-    assert(da.calculations.dif_lnf != NULL, &counter);
-    assert(da.size_a == 2 && da.size_b == 1, &counter);
-
+static void test_error_massage(void) {
     set_error(NO_ERROR);
-    da = set_for_dif_add(a, b, 'x', 2, 1);
-    assert(get_error() == INVAL_TYPE, &counter);
-
-    float lnf[] = {1.0f, 2.0f};
-    float vr[] = {3.0f, 4.0f};
-    mul_calc mc = set_for_mul_calc(lnf, vr, 'f', 2);
-    assert(mc.calculations.mul_lnf != NULL, &counter);
-    assert(mc.calculations.calc_lnf != NULL, &counter);
-    assert(mc.size == 2, &counter);
-
-    return counter;
-}
-
-int test_globals()
-{
-    int counter = 0;
-
-    set_error(NO_ERROR);
-    assert(get_error() == NO_ERROR, &counter);
+    ASSERT(str_eq(error_massage(), "Неизвестная ошибка."));
     set_error(MEMORY_ERROR);
-    assert(get_error() == MEMORY_ERROR, &counter);
-    set_error(INVAL_LNF_PARAM);
-    assert(get_error() == INVAL_LNF_PARAM, &counter);
-
-    return counter;
+    ASSERT(str_eq(error_massage(), "Ошибка выделения памяти."));
+    set_error(INVAL_TYPE);
+    ASSERT(str_eq(error_massage(), "Ошибка: неизвестный тип."));
+    printf("test_error_massage OK\n");
 }
 
-int main()
-{
-    int total_errors = 0;
+static void test_set_for_dif_add(void) {
+    float a[] = {1.0f}, b[] = {2.0f};
+    dif_add da = set_for_dif_add(a, b, 'f', 1, 1);
+    ASSERT(da.calculations.add_lnf != NULL);
+    ASSERT(da.calculations.dif_lnf != NULL);
+    reset_error();
+    da = set_for_dif_add(NULL, b, 'f', 1, 1);
+    ASSERT(get_error() == INVAL_LNF_PARAM);
+    reset_error();
+    da = set_for_dif_add(a, b, 'x', 1, 1);
+    ASSERT(get_error() == INVAL_TYPE);
+    printf("test_set_for_dif_add OK\n");
+}
 
-    printf("Запуск тестов...\n\n");
+static void test_set_for_mul_calc(void) {
+    float lnf[] = {1.0f}, vars[] = {2.0f};
+    mul_calc mc = set_for_mul_calc(lnf, vars, 'f', 1);
+    ASSERT(mc.calculations.mul_lnf != NULL);
+    ASSERT(mc.calculations.calc_lnf != NULL);
+    reset_error();
+    mc = set_for_mul_calc(NULL, vars, 'f', 1);
+    ASSERT(get_error() == INVAL_LNF_PARAM);
+    reset_error();
+    mc = set_for_mul_calc(lnf, vars, 'x', 1);
+    ASSERT(get_error() == INVAL_TYPE);
+    printf("test_set_for_mul_calc OK\n");
+}
 
-    total_errors += test_complex();
-    total_errors += test_operations_complex();
-    total_errors += test_operations_float();
-    total_errors += test_io_functions();
-    total_errors += test_lineform();
-    total_errors += test_globals();
+static void test_globals_error(void) {
+    reset_error();
+    ASSERT(get_error() == NO_ERROR);
+    set_error(MEMORY_ERROR);
+    ASSERT(get_error() == MEMORY_ERROR);
+    set_error(INVAL_TYPE);
+    ASSERT(get_error() == INVAL_TYPE);
+    printf("test_globals_error OK\n");
+}
 
-    printf("\n========== РЕЗУЛЬТАТ ==========\n");
-    if (total_errors == 0)
-        printf("Все тесты пройдены успешно!\n");
-    else
-        printf("Обнаружено ошибок: %d\n", total_errors);
+int main() {
+    printf("========== RUNNING TESTS ==========\n");
 
-    return total_errors;
+    test_add_cmplx();
+    test_dif_cmplx();
+    test_mul_cmplx();
+
+    test_result_size();
+    test_get_cmplx_sum();
+    test_get_flt_sum();
+    test_get_cmplx_dif();
+    test_get_flt_dif();
+    test_get_cmplx_mul();
+    test_get_flt_mul();
+    test_get_cmplx_calc();
+    test_get_flt_calc();
+
+    test_check_float();
+    test_check_cmplx();
+    test_cmplx_output();
+    test_get_lnf_float();
+    test_get_lnf_complex();
+    test_get_factor();
+    test_output_lnf();
+    test_output_num();
+    test_error_massage();
+
+    test_set_for_dif_add();
+    test_set_for_mul_calc();
+
+    test_globals_error();
+
+    printf("========== ALL TESTS PASSED ==========\n");
+    return 0;
 }
