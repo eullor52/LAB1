@@ -8,6 +8,8 @@ void map(void func(void*), int count, ...)
     va_start(args, count);
 
     for (int i = 0; i < count; i++) func(va_arg(args, void*));
+
+    va_end(args);
 }
 
 void clean_input_buffer()
@@ -16,7 +18,7 @@ void clean_input_buffer()
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-int check_float(char* str)
+int check_float_number(char* str)
 {
     int num_len = 0;
     int i = 0;
@@ -45,14 +47,14 @@ int check_float(char* str)
     else return -1;
 }
 
-C_info check_cmplx(char* str)
+C_info check_complex_number(char* str)
 {
     C_info result, err = {0,0};
     int tmp, i = 0;
 
     if (*str == '-') ++i;
 
-    tmp = check_float(str + i);
+    tmp = check_float_number(str + i);
 
     if (tmp <= 0) return err;
     else i += tmp;
@@ -60,7 +62,7 @@ C_info check_cmplx(char* str)
     if (str[i] == '-' || str[i] == '+')
     {
         ++i;
-        tmp = check_float(str + i);
+        tmp = check_float_number(str + i);
 
         if(tmp <= 0) return err;
         else i += tmp;
@@ -88,7 +90,7 @@ C_info check_cmplx(char* str)
     else return err;
 }
 
-int cmplx_output(char* str, Complex num)
+int complex_number_output(char* str, Complex num)
 {
     int i;
 
@@ -114,13 +116,13 @@ int cmplx_output(char* str, Complex num)
     }
 }
 
-char* cmplx_lnf_output(Complex* lnf, unsigned size)
+char* complex_lineform_output(Complex* lnf, unsigned size)
 {
     char* buffer = malloc(sizeof(char) * (MAX_NUM_LEN * 2 + 3) * size);
 
     if(!buffer) return NULL;
 
-    int  p = cmplx_output(buffer, lnf[0]);
+    int  p = complex_number_output(buffer, lnf[0]);
 
     if (p != 0)
     {
@@ -135,10 +137,10 @@ char* cmplx_lnf_output(Complex* lnf, unsigned size)
         if (lnf[i].Re != 0 && lnf[i].Im != 0)
         {
             buffer[p++] = '(';
-            p += cmplx_output(buffer + p, lnf[i]);
+            p += complex_number_output(buffer + p, lnf[i]);
             buffer[p++] = ')';
         }
-        else p += cmplx_output(buffer + p, lnf[i]);
+        else p += complex_number_output(buffer + p, lnf[i]);
 
         p += sprintf(buffer + p, "*x%d", i);
 
@@ -149,7 +151,7 @@ char* cmplx_lnf_output(Complex* lnf, unsigned size)
     return buffer;
 }
 
-char* flt_lnf_output(float* lnf, unsigned size)
+char* float_lineform_output(float* lnf, unsigned size)
 {
     char* buffer = malloc(sizeof(char) * MAX_NUM_LEN * size);
 
@@ -203,12 +205,12 @@ char* flt_lnf_output(float* lnf, unsigned size)
     return buffer;
 }
 
-char* output_lnf(void* lnf, unsigned size, char type)
+char* lineform_output(void* lnf, unsigned size, char type)
 {
     if (type == 'c')
     {
         Complex* c_lnf = (Complex*)lnf;
-        char* result = cmplx_lnf_output(c_lnf, size);
+        char* result = complex_lineform_output(c_lnf, size);
         if (!result) 
         {
             set_error(MEMORY_ERROR);
@@ -220,7 +222,7 @@ char* output_lnf(void* lnf, unsigned size, char type)
     else if (type == 'f')
     {
         float* f_lnf = (float*)lnf;
-        char* result = flt_lnf_output(f_lnf, size);   // исправлено: char* result
+        char* result = float_lineform_output(f_lnf, size);  
         if (!result)
         {
             set_error(MEMORY_ERROR);
@@ -235,7 +237,7 @@ char* output_lnf(void* lnf, unsigned size, char type)
     }
 }
 
-Lnf get_lnf(char* str, char type)
+Lnf get_lineform(char* str, char type)
 {
     Lnf result;
 
@@ -247,10 +249,9 @@ Lnf get_lnf(char* str, char type)
         int i = 0;
         while (str[i] != '\n' && str[i] != 0)
         {
-            // пропуск пробелов
             while (str[i] == ' ') ++i;
 
-            C_info tmp = check_cmplx(str + i);
+            C_info tmp = check_complex_number(str + i);
             if (tmp.count == 0) 
             {
                 if (lnf) free(lnf);
@@ -321,7 +322,7 @@ Lnf get_lnf(char* str, char type)
         {
             while (str[i] == ' ') ++i;
             float tmp;
-            int count = check_float(str+i);
+            int count = check_float_number(str+i);
 
             if (sscanf(str + i, "%f", &tmp) != 1) 
             {
@@ -367,7 +368,7 @@ void* get_factor(char* str, char type)
         result->Im = 0;
         result->Re = 0;
 
-        C_info c = check_cmplx(str);
+        C_info c = check_complex_number(str);
 
         if (c.count == 0)
         {
@@ -386,7 +387,7 @@ void* get_factor(char* str, char type)
     {
         float* result = malloc(sizeof(float));
         
-        if (check_float(str) <= 0)
+        if (check_float_number(str) <= 0)
         {
             set_error(INVAL_INPUT_STR);
             return NULL;
@@ -399,7 +400,7 @@ void* get_factor(char* str, char type)
     else return NULL;
 }
 
-char* output_num(void* num, char type)
+char* number_output(void* num, char type)
 {
     if (type == 'c')
     {
@@ -413,7 +414,7 @@ char* output_num(void* num, char type)
 
         Complex* c_num = (Complex*)num;
 
-        int i = cmplx_output(result, *c_num);
+        int i = complex_number_output(result, *c_num);
 
         if ( !i ) 
         {

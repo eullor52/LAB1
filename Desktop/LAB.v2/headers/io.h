@@ -24,16 +24,16 @@ typedef struct
 void clean_input_buffer();
 
 void map(void func(void*), int count, ...);
-C_info check_cmplx(char* str);
-int check_float(char* str);
-int get_cmplx(char* str, Complex* num);
-int cmplx_output(char* str, Complex num);
-char* cmplx_lnf_output(Complex* lnf, unsigned size);
-char* flt_lnf_output(float* lnf, unsigned size);
-char* output_lnf(void* lnf, unsigned size, char type);
-Lnf get_lnf(char* str, char type);
+C_info check_complex_number(char* str);
+int check_float_number(char* str);
+int get_complex_number(char* str, Complex* num);
+int complex_number_output(char* str, Complex num);
+char* complex_lineform_output(Complex* lnf, unsigned size);
+char* float_lineform_output(float* lnf, unsigned size);
+char* lineform_output(void* lnf, unsigned size, char type);
+Lnf get_lineform(char* str, char type);
 void* get_factor(char* str, char type);
-char* output_num(void* num, char type);
+char* number_output(void* num, char type);
 char* error_massage();
 
 #endif

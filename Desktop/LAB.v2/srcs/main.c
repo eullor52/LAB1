@@ -67,7 +67,7 @@ int main()
                 continue;
             }
             
-            Lnf a = get_lnf(str1, type);
+            Lnf a = get_lineform(str1, type);
             if (!a.lnf)
             {
                 free(str1);
@@ -76,7 +76,7 @@ int main()
                 continue;
             }
 
-            Lnf b = get_lnf(str2, type);
+            Lnf b = get_lineform(str2, type);
             if (!b.lnf)
             {
                 free(str1);
@@ -139,8 +139,8 @@ int main()
             char* str1 = get_input(1);
             char* str2 = get_input(1);
 
-            Lnf a = get_lnf(str1, type);
-            Lnf b = get_lnf(str2, type);
+            Lnf a = get_lineform(str1, type);
+            Lnf b = get_lineform(str2, type);
 
             dif_add lnf = set_for_dif_add(a.lnf, b.lnf, type, a.size, b.size);
 
@@ -166,7 +166,7 @@ int main()
             char* str1 = get_input(1);
             char* str2 = get_input(2);
             
-            Lnf a = get_lnf(str1, type);
+            Lnf a = get_lineform(str1, type);
             void* b = get_factor(str2, type);
 
             mul_calc lnf = set_for_mul_calc(a.lnf, b, type, a.size);
@@ -193,8 +193,8 @@ int main()
             char* str1 = get_input(1);
             char* str2 = get_input(3);
 
-            Lnf a = get_lnf(str1, type);
-            Lnf b = get_lnf(str2, type);
+            Lnf a = get_lineform(str1, type);
+            Lnf b = get_lineform(str2, type);
 
             mul_calc lnf = set_for_mul_calc(a.lnf, b.lnf, type, a.size);
 
