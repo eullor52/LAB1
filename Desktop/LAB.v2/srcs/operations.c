@@ -2,245 +2,180 @@
 #include "complex.h"
 #include <stdlib.h>
 #include "globals.h"
+#include "lineform.h"
 
-unsigned result_size(unsigned a, unsigned b)
-{
-    if (a > b) return a;
-    else return b;
+dynamic_array get_complex_sum(dynamic_array left, dynamic_array right) {
+    dynamic_array error = {NULL, 0};
+    if (!(left.data && right.data)) {
+        set_error(INVAL_LINEFORM_PARAMETES);
+        return error;
+    }
+    dynamic_array result = complex_array.create(0);
+    IS_ALRIGHT(error);
+    Complex *a = (Complex*)left.data, *b = (Complex*)right.data;
+    size_t min = left.size < right.size ? left.size : right.size;
+    for (size_t i = 0; i < min; ++i) {
+        Complex sum = add_complex(a[i], b[i]);
+        complex_array.append(&result, &sum);
+    }
+    if (left.size > right.size) {
+        for (size_t i = min; i < left.size; ++i)
+            complex_array.append(&result, &a[i]);
+    } else if (right.size > left.size) {
+        for (size_t i = min; i < right.size; ++i)
+            complex_array.append(&result, &b[i]);
+    }
+    return result;
 }
 
-void* get_cmplx_sum(void* a, void* b, unsigned size_a, unsigned size_b)
-{
-    if ( !(a && b && size_a && size_b))
-    {
-        set_error(INVAL_LNF_PARAM);
-        return NULL;
+dynamic_array get_double_sum(dynamic_array left, dynamic_array right) {
+    dynamic_array error = {NULL, 0};
+    if (!(left.data && right.data)) {
+        set_error(INVAL_LINEFORM_PARAMETES);
+        return error;
     }
-    unsigned r_size = result_size(size_a, size_b);
-    Complex* result = malloc(sizeof(Complex) * r_size);
-
-    if (!result)
-    {
-        set_error(MEMORY_ERROR);
-        return NULL;
+    dynamic_array result = double_array.create(0);
+    IS_ALRIGHT(error);
+    double *a = (double*)left.data, *b = (double*)right.data;
+    size_t min = left.size < right.size ? left.size : right.size;
+    for (size_t i = 0; i < min; ++i) {
+        double sum = a[i] + b[i];
+        double_array.append(&result, &sum);
     }
-
-    Complex *left = (Complex*)a, *right = (Complex*)b;
-
-    if (size_a > size_b)
-    {
-        for (int i = 0; i < size_b; i++) result[i] = add_cmplx(left[i], right[i]);
-        for (int i = size_b; i < size_a; i++) result[i] = left[i];
+    if (left.size > right.size) {
+        for (size_t i = min; i < left.size; ++i)
+            double_array.append(&result, &a[i]);
+    } else if (right.size > left.size) {
+        for (size_t i = min; i < right.size; ++i)
+            double_array.append(&result, &b[i]);
     }
-    else
-    {
-        for (int i = 0; i < size_a; i++) result[i] = add_cmplx(left[i], right[i]);
-        for (int i = size_a; i < size_b; i++) result[i] = right[i];
-    }
-
-    return (void*)result;
+    return result;
 }
 
-void* get_flt_sum(void* a, void* b, unsigned size_a, unsigned size_b)
-{
-    if ( !(a && b && size_a && size_b))
-    {
-        set_error(INVAL_LNF_PARAM);
-        return NULL;
+dynamic_array get_complex_difference(dynamic_array left, dynamic_array right) {
+    dynamic_array error = {NULL, 0};
+    if (!(left.data && right.data)) {
+        set_error(INVAL_LINEFORM_PARAMETES);
+        return error;
     }
-
-    unsigned r_size = result_size(size_a, size_b);
-    float* result = malloc(sizeof(float) * r_size);
-
-    if (!result)
-    {
-        set_error(MEMORY_ERROR);
+    dynamic_array result = complex_array.create(0);
+    IS_ALRIGHT(error);
+    Complex *a = (Complex*)left.data, *b = (Complex*)right.data;
+    size_t min = left.size < right.size ? left.size : right.size;
+    for (size_t i = 0; i < min; ++i) {
+        Complex diff = dif_complex(a[i], b[i]);
+        complex_array.append(&result, &diff);
     }
-
-    float *left = (float*)a, *right = (float*)b;
-
-    if (size_a > size_b)
-    {
-        for (int i = 0; i < size_b; i++) result[i] = left[i] + right[i];
-        for (int i = size_b; i < size_a; i++) result[i] = left[i];
-    }
-    else
-    {
-        for (int i = 0; i < size_a; i++) result[i] = left[i] + right[i];
-        for (int i = size_a; i < size_b; i++) result[i] = right[i];
-    }
-
-    return (void*)result;
-}
-
-void* get_cmplx_dif(void* a, void* b, unsigned size_a, unsigned size_b)
-{
-    if ( !(a && b && size_a && size_b))
-    {
-        set_error(INVAL_LNF_PARAM);
-        return NULL;
-    }
-
-    unsigned r_size = result_size(size_a, size_b);
-    Complex* result = malloc(sizeof(Complex) * r_size);
-
-    if (!result)
-    {
-        set_error(MEMORY_ERROR);
-        return NULL;
-    }
-
-    Complex *left = (Complex*)a, *right = (Complex*)b;
-
-    if (size_a > size_b)
-    {
-        for (int i = 0; i < size_b; i++) result[i] = dif_cmplx(left[i], right[i]);
-        for (int i = size_b; i < size_a; i++) result[i] = left[i];
-    }
-    else
-    {
-        for (int i = 0; i < size_a; i++) result[i] = dif_cmplx(left[i], right[i]);
-        for (int i = size_a; i < size_b; i++)
-        {
-            result[i] = right[i];
-            result[i].Im *= -1;
-            result[i].Re *= -1;
+    if (left.size > right.size) {
+        for (size_t i = min; i < left.size; ++i)
+            complex_array.append(&result, &a[i]);
+    } else if (right.size > left.size) {
+        Complex zero = {0, 0};
+        for (size_t i = min; i < right.size; ++i) {
+            Complex neg = dif_complex(zero, b[i]);
+            complex_array.append(&result, &neg);
         }
     }
-
-    return (void*)result;
+    return result;
 }
 
-void* get_flt_dif(void* a, void* b, unsigned size_a, unsigned size_b)
-{
-    if ( !(a && b && size_a && size_b))
-    {
-        set_error(INVAL_LNF_PARAM);
+dynamic_array get_double_difference(dynamic_array left, dynamic_array right) {
+    dynamic_array error = {NULL, 0};
+    if (!(left.data && right.data)) {
+        set_error(INVAL_LINEFORM_PARAMETES);
+        return error;
+    }
+    dynamic_array result = double_array.create(0);
+    IS_ALRIGHT(error);
+    double *a = (double*)left.data, *b = (double*)right.data;
+    size_t min = left.size < right.size ? left.size : right.size;
+    for (size_t i = 0; i < min; ++i) {
+        double diff = a[i] - b[i];
+        double_array.append(&result, &diff);
+    }
+    if (left.size > right.size) {
+        for (size_t i = min; i < left.size; ++i)
+            double_array.append(&result, &a[i]);
+    } else if (right.size > left.size) {
+        for (size_t i = min; i < right.size; ++i) {
+            double neg = -b[i];
+            double_array.append(&result, &neg);
+        }
+    }
+    return result;
+}
+
+dynamic_array get_complex_multiplication(dynamic_array lineform, void* factor) {
+    dynamic_array error = {NULL, 0};
+    if (!lineform.data || !factor) {
+        set_error(INVAL_LINEFORM_PARAMETES);
+        return error;
+    }
+    dynamic_array result = complex_array.create(lineform.size);
+    IS_ALRIGHT(error);
+    Complex *coeffs = (Complex*)lineform.data;
+    Complex f = *(Complex*)factor;
+    for (size_t i = 0; i < lineform.size; ++i) {
+        Complex prod = mul_complex(coeffs[i], f);
+        complex_array.append(&result, &prod);
+    }
+    return result;
+}
+
+dynamic_array get_double_multiplication(dynamic_array lineform, void* factor) {
+    dynamic_array error = {NULL, 0};
+    if (!lineform.data || !factor) {
+        set_error(INVAL_LINEFORM_PARAMETES);
+        return error;
+    }
+    dynamic_array result = double_array.create(lineform.size);
+    IS_ALRIGHT(error);
+    double *coeffs = (double*)lineform.data;
+    double f = *(double*)factor;
+    for (size_t i = 0; i < lineform.size; ++i) {
+        double prod = coeffs[i] * f;
+        double_array.append(&result, &prod);
+    }
+    return result;
+}
+
+void* get_complex_calculation(dynamic_array lineform, dynamic_array variables) {
+    if (!lineform.data || !variables.data || lineform.size != variables.size) {
+        set_error(INVAL_LINEFORM_PARAMETES);
         return NULL;
     }
-
-    unsigned r_size = result_size(size_a, size_b);
-    float* result = malloc(sizeof(float) * r_size);
-
-    if (!result)
-    {
+    Complex *coeffs = (Complex*)lineform.data;
+    Complex *vars = (Complex*)variables.data;
+    Complex result = {0, 0};
+    for (size_t i = 0; i < lineform.size; ++i) {
+        Complex term = mul_complex(coeffs[i], vars[i]);
+        result = add_complex(result, term);
+    }
+    Complex *out = malloc(sizeof(Complex));
+    if (!out) {
         set_error(MEMORY_ERROR);
         return NULL;
     }
-
-    float *left = (float*)a, *right = (float*)b;
-
-    if (size_a > size_b)
-    {
-        for (int i = 0; i < size_b; i++) result[i] = left[i] - right[i];
-        for (int i = size_b; i < size_a; i++) result[i] = left[i];
-    }
-    else
-    {
-        for (int i = 0; i < size_a; i++) result[i] = left[i] - right[i];
-        for (int i = size_a; i < size_b; i++) result[i] = (-1) * right[i];
-    }
-
-    return (void*)result;
+    *out = result;
+    return out;
 }
 
-void* get_cmplx_mul(void* a, void* b, unsigned size)
-{
-    if (!(a && b && size))
-    {
-        set_error(INVAL_LNF_PARAM);
+void* get_double_calculation(dynamic_array lineform, dynamic_array variables) {
+    if (!lineform.data || !variables.data || lineform.size != variables.size) {
+        set_error(INVAL_LINEFORM_PARAMETES);
         return NULL;
     }
-
-    Complex* result = malloc(sizeof(Complex) * size);
-
-    if (!result)
-    {
+    double *coeffs = (double*)lineform.data;
+    double *vars = (double*)variables.data;
+    double result = 0;
+    for (size_t i = 0; i < lineform.size; ++i) {
+        result += coeffs[i] * vars[i];
+    }
+    double *out = malloc(sizeof(double));
+    if (!out) {
         set_error(MEMORY_ERROR);
         return NULL;
     }
-
-    Complex *lnf = (Complex*)a, *factor = (Complex*)b;
-
-    for (int i = 0; i < size; i++) result[i] = mul_cmplx(lnf[i], *factor);
-
-    return (void*)result;
-}
-
-void* get_flt_mul(void* a, void* b, unsigned size)
-{
-    if (!(a && b && size))
-    {
-        set_error(INVAL_LNF_PARAM);
-        return NULL;
-    }
-
-    float* result = malloc(sizeof(float) * size);
-
-    if(!result)
-    {
-        set_error(MEMORY_ERROR);
-        return NULL;
-    }
-
-    float *lnf = (float*)a, *factor = (float*)b;
-
-    for (int i = 0; i < size; i++) result[i] = lnf[i] * (*factor);
-
-    return (void*)result;
-}
-
-void* get_cmplx_calc(void* a, void* b, unsigned size)
-{
-    if (!(a && b && size))
-    {
-        set_error(INVAL_LNF_PARAM);
-        return NULL;
-    }
-
-    Complex* result  = malloc(sizeof(Complex));
-
-    if (!result)
-    {
-        set_error(MEMORY_ERROR);
-        return NULL;
-    }
-    Complex *lnf  = (Complex*)a, *factors = (Complex*)b;
-
-    *result  = lnf[0];
-
-    for (int i = 1; i < size; i++)
-    {
-        Complex tmp = mul_cmplx(lnf[i], factors[i - 1]);
-        *result = add_cmplx(*result, tmp);
-    }
-    return (void*)result;
-}
-
-void* get_flt_calc(void* a, void* b, unsigned size)
-{
-    if (!(a && b && size))
-    {
-        set_error(INVAL_LNF_PARAM);
-        return NULL;
-    }
-
-    float* result  = malloc(sizeof(float));
-
-    if (!result)
-    {
-        set_error(MEMORY_ERROR);
-        return NULL;
-    }
-    
-    float *lnf  = (float*)a, *factors = (float*)b;
-
-    *result  = lnf[0];
-
-    for (int i = 1; i < size; i++)
-    {
-        float tmp = lnf[i] * factors[i - 1];
-        *result += tmp;
-    }
-    return (void*)result;
+    *out = result;
+    return out;
 }

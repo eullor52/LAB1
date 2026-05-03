@@ -2,39 +2,45 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Iheaders
 
 SRCDIR = srcs
-OBJDIR_PROG = obj_prog
-OBJDIR_TEST = obj_test
+OBJS_DIR = objs
+LIBRARY = liblineform.lib
+TARGET = program.exe
+TESTS = tests.exe
+MAIN = main.c
+TEST_SRC = test.c
 
-ALL_SRCS = $(wildcard $(SRCDIR)/*.c)
+SOURCES = $(wildcard $(SRCDIR)/*.c)
+OBJECTS = $(patsubst $(SRCDIR)/%.c,$(OBJS_DIR)/%.o,$(SOURCES))
 
-PROG_SRCS = $(filter-out $(SRCDIR)/test.c, $(ALL_SRCS))
-PROG_OBJS = $(addprefix $(OBJDIR_PROG)/, $(notdir $(PROG_SRCS:.c=.o)))
+lib: $(LIBRARY)
 
-TEST_SRCS = $(filter-out $(SRCDIR)/main.c, $(ALL_SRCS))
-TEST_OBJS = $(addprefix $(OBJDIR_TEST)/, $(notdir $(TEST_SRCS:.c=.o)))
+$(LIBRARY): $(OBJECTS)
+	ar rcs $@ $^
 
-.PHONY: all clean fclean re program tests
+$(OBJS_DIR):
+	mkdir -p $@
 
-all: program
-
-program: $(PROG_OBJS)
-	$(CC) $^ -o $@
-
-tests: $(TEST_OBJS)
-	$(CC) $^ -o $@
-
-$(OBJDIR_PROG)/%.o: $(SRCDIR)/%.c
-	@mkdir -p $(OBJDIR_PROG)
+$(OBJS_DIR)/%.o: $(SRCDIR)/%.c | $(OBJS_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR_TEST)/%.o: $(SRCDIR)/%.c
-	@mkdir -p $(OBJDIR_TEST)
-	$(CC) $(CFLAGS) -c $< -o $@
+program: $(TARGET)
+$(TARGET): $(MAIN) $(LIBRARY)
+	$(CC) $^ -o $@
+
+tests: $(TESTS)
+$(TESTS): $(TEST_SRC) $(LIBRARY)
+	$(CC) $^ -o $@
+
+run: program
+	./$(TARGET)
+
+run_tests: $(TESTS)
+	./$(TESTS)
+
+all: program tests
 
 clean:
-	rm -rf $(OBJDIR_PROG) $(OBJDIR_TEST)
+	rm -f $(LIBRARY) $(TARGET) $(TESTS)
+	rm -rf $(OBJS_DIR)
 
-fclean: clean
-	rm -f program.exe tests.exe
-
-re: fclean all
+.PHONY: lib program tests all clean run run_tests

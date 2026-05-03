@@ -1,6 +1,6 @@
 #include "complex.h"
 
-Complex add_cmplx(Complex a, Complex b)
+Complex add_complex(Complex a, Complex b)
 {
     Complex result;
     result.Re = a.Re + b.Re;
@@ -8,7 +8,7 @@ Complex add_cmplx(Complex a, Complex b)
     return result;
 }
 
-Complex dif_cmplx(Complex a, Complex b)
+Complex dif_complex(Complex a, Complex b)
 {
     Complex result;
     result.Re = a.Re - b.Re;
@@ -16,7 +16,7 @@ Complex dif_cmplx(Complex a, Complex b)
     return result;
 }
 
-Complex mul_cmplx(Complex a, Complex b)
+Complex mul_complex(Complex a, Complex b)
 {
     Complex result;
     result.Re = a.Re * b.Re - a.Im * b.Im;

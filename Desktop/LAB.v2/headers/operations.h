@@ -1,19 +1,19 @@
 #ifndef OPERATIONS_H
 #define OPERATIONS_H
 
+#include "lineform.h"
+#include "complex.h"
 
-unsigned result_size(unsigned a, unsigned b);
+dynamic_array get_complex_sum(dynamic_array left, dynamic_array right);
+dynamic_array get_double_sum(dynamic_array left, dynamic_array right);
 
-void* get_cmplx_sum(void* a, void* b, unsigned size_a, unsigned size_b);
-void* get_flt_sum(void* a, void* b, unsigned size_a, unsigned size_b);
+dynamic_array get_complex_difference(dynamic_array left, dynamic_array right);
+dynamic_array get_double_difference(dynamic_array left, dynamic_array right);
 
-void* get_cmplx_dif(void* a, void* b, unsigned size_a, unsigned size_b);
-void* get_flt_dif(void* a, void* b, unsigned size_a, unsigned size_b);
+dynamic_array get_complex_multiplication(dynamic_array lineform, void* factor);
+dynamic_array get_double_multiplication(dynamic_array lineform, void* factor);
 
-void* get_cmplx_mul(void* a, void* b, unsigned size);
-void* get_flt_mul(void* a, void* b, unsigned size);
+void* get_complex_calculation(dynamic_array lineform, dynamic_array variables);
+void* get_double_calculation(dynamic_array lineform, dynamic_array variables);
 
-void* get_cmplx_calc(void* a, void* b, unsigned size);
-void* get_flt_calc(void* a, void* b, unsigned size);
-
-#endif
+#endif 

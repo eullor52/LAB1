@@ -3,12 +3,12 @@
 
 typedef struct
 {
-    float Re;
-    float Im;
-}Complex;
+    double Re;
+    double Im;
+} Complex;
 
-Complex add_cmplx(Complex a, Complex b);
-Complex dif_cmplx(Complex a, Complex b);
-Complex mul_cmplx(Complex a, Complex b);
+Complex add_complex(Complex a, Complex b);
+Complex dif_complex(Complex a, Complex b);
+Complex mul_complex(Complex a, Complex b);
 
 #endif

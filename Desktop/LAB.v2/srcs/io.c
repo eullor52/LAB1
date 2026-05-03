@@ -1,483 +1,320 @@
 #include "io.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <math.h>
 #include "globals.h"
+#include "complex.h"
 
-void map(void func(void*), int count, ...)
-{
-    va_list args;
-    va_start(args, count);
+#define MAX_NUM_LEN 64
 
-    for (int i = 0; i < count; i++) func(va_arg(args, void*));
-
-    va_end(args);
+int check_double_number(const char* str) {
+    int len = 0;
+    const char* p = str;
+    if (*p == '-' || *p == '+') {
+        p++;
+        len++; 
+    }
+    while (isdigit(*p)) {
+        ++p;
+        ++len;
+    }
+    if (*p == '.' || *p == ',') {
+        ++p; 
+        ++len;
+        while (isdigit(*p)) {
+            p++; len++;
+        }
+        return (len <= MAX_NUM_LEN) ? len : -1;
+    }
+    return (len <= MAX_NUM_LEN) ? len : -1;
 }
 
-void clean_input_buffer()
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
-
-int check_float_number(char* str)
-{
-    int num_len = 0;
+C_info check_complex_number(const char* str) {
+    C_info err = {0, 0, 0};
     int i = 0;
-
-    while (str[i] > 47 && str[i] < 58) 
-    {
-        ++i; 
-        ++num_len;
-    }
-    
-    if (str[i] == ',' || str[i] == '.')
-    {
-        ++i;
-        ++num_len;
-
-        while(str[i] > 47 && str[i] < 58)
-        {
-            ++i;
-            ++num_len;
-        }
-
-        if (num_len <= MAX_NUM_LEN) return num_len;
-        else return -1;
-    }
-    else if (num_len <= MAX_NUM_LEN) return num_len;
-    else return -1;
-}
-
-C_info check_complex_number(char* str)
-{
-    C_info result, err = {0,0};
-    int tmp, i = 0;
-
-    if (*str == '-') ++i;
-
-    tmp = check_float_number(str + i);
-
+    if (str[0] == '-' || str[0] == '+') ++i;
+    int tmp = check_double_number(str + i);
     if (tmp <= 0) return err;
-    else i += tmp;
-
-    if (str[i] == '-' || str[i] == '+')
-    {
+    i += tmp;
+    if (str[i] == '-' || str[i] == '+') {
+        char sign = str[i];
         ++i;
-        tmp = check_float_number(str + i);
+        tmp = check_double_number(str + i);
+        if (tmp <= 0) return err;
+        i += tmp;
+        if (str[i] == '*' && str[i+1] == 'i' && (!str[i+2] || str[i+2]==' ' || str[i+2]=='\n')) {
+            return (C_info){i+2, 2, sign};
+        }
+        return err;
+    } else if (str[i] == ' ' || str[i] == '\n' || str[i] == 0) {
+        return (C_info){i, 1, 0};
+    } else if (str[i] == '*' && str[i+1] == 'i' && (!str[i+2] || str[i+2]==' ' || str[i+2]=='\n')) {
+        return (C_info){i+2, -1, str[0]};
+    }
+    return err;
+}
 
-        if(tmp <= 0) return err;
-        else i += tmp;
+int complex_to_string(char* buf, Complex c) {
+    if (c.Re == 0 && c.Im == 0) return 0;
+    if (c.Im != 0 && c.Re != 0) {
+        return sprintf(buf, "%.2f %c %.2f*i", c.Re, (c.Im >= 0) ? '+' : '-', fabs(c.Im));
+    }
+    else if (c.Im == 0) {
+        return sprintf(buf, "%.2f", c.Re);
+    }
+    else {
+        return sprintf(buf, "%.2f*i", c.Im);
+    }
+}
+
+dynamic_array parse_complex_lineform(const char* str) {
+    dynamic_array err = {NULL, 0};
+    dynamic_array result = complex_array.create(0);
+    if (get_error() != NO_ERROR) return err;
+    
+    int i = 0;
+    while (str[i] != '\0') {
+        while (isspace(str[i])) i++;
+        if (!str[i]) break;
         
-        if (str[i] == '*' && str[i + 1] == 'i' && (str[i + 2] == 0 || str[i + 2] == ' ' || str[i + 2] == '\n'))
-        {
-            result.len = i + 2;
-            result.count = 2;
-            return result;
+        C_info info = check_complex_number(str + i);
+        if (info.count == 0) {
+            complex_array.delete(&result);
+            set_error(INVAL_INPUT_STR);
+            return err;
         }
-        else return err;
-    }
-    else if (str[i] == ' ' || str[i] == '\n' || str[i] == 0)
-    {
-        result.len = i;
-        result.count = 1;
-        return result;
-    }
-    else if (str[i] == '*' && str[i + 1] == 'i' && (str[i + 2] == ' ' || str[i + 2] == '\n' || str[i + 2] == 0))
-    {
-        result.len = i + 2;
-        result.count = -1;
-        return result;
-    }
-    else return err;
-}
-
-int complex_number_output(char* str, Complex num)
-{
-    int i;
-
-    if (num.Re == 0 && num.Im == 0) return 0;
-
-    if (num.Im != 0 && num.Re != 0)
-    {
-        i = sprintf(str, "%.2f + %.2f*i", num.Re, num.Im);
-
-        return i;
-    }
-    else if (num.Im == 0)
-    {
-        i = sprintf(str, "%.2f", num.Re);
-
-        return i;
-    }
-    else
-    {
-        i = sprintf(str, "%.2f*i", num.Im);
-
-        return i;
-    }
-}
-
-char* complex_lineform_output(Complex* lnf, unsigned size)
-{
-    char* buffer = malloc(sizeof(char) * (MAX_NUM_LEN * 2 + 3) * size);
-
-    if(!buffer) return NULL;
-
-    int  p = complex_number_output(buffer, lnf[0]);
-
-    if (p != 0)
-    {
-        sprintf(buffer + p, "%s", " + ");
-        p += 3;
-    }
-
-    for (int i = 1; i < size; i++)
-    {
-        if (lnf[i].Re == 0 && lnf[i].Im == 0) continue;
-
-        if (lnf[i].Re != 0 && lnf[i].Im != 0)
-        {
-            buffer[p++] = '(';
-            p += complex_number_output(buffer + p, lnf[i]);
-            buffer[p++] = ')';
-        }
-        else p += complex_number_output(buffer + p, lnf[i]);
-
-        p += sprintf(buffer + p, "*x%d", i);
-
-        if (i < size - 1) p += sprintf(buffer + p, " + ");
-    }
-
-    buffer[p++] = '\0';
-    return buffer;
-}
-
-char* float_lineform_output(float* lnf, unsigned size)
-{
-    char* buffer = malloc(sizeof(char) * MAX_NUM_LEN * size);
-
-    if (!buffer)  return NULL;
-
-    char tmp[100];
-    int p = 0;
-
-    if (lnf[0] != 0) 
-    {
-        sprintf(tmp, "%.2f", lnf[0]);
-
-        for (int i = 0; tmp[i] != '\0'; i++)
-        {
-            buffer[p] = tmp[i];
-            ++p;
-        }
-        buffer[p++] = ' ';
-        buffer[p++] = '+';
-        buffer[p++] = ' ';
-    }
-
-    for (int i = 1; i < size; i++)
-    {
-        char vrbl[10];
         
-        sprintf(tmp, "%.2f", lnf[i]);
-        
-        for (int k = 0; tmp[k] != '\0'; k++)
-        {
-            buffer[p++] = tmp[k];
-        }
-
-        buffer[p++] = '*';
-        buffer[p++] = 'x';
-
-        sprintf(vrbl, "%d", i);
-
-        for (int x = 0; vrbl[x] != '\0'; x++)
-        {
-            buffer[p++] = vrbl[x];
-        }
-        if (i != size - 1)
-        {
-            buffer[p++] = ' ';
-            buffer[p++] = '+';
-            buffer[p++] = ' ';
-        }
-    }
-    buffer[p++] = '\0';
-    return buffer;
-}
-
-char* lineform_output(void* lnf, unsigned size, char type)
-{
-    if (type == 'c')
-    {
-        Complex* c_lnf = (Complex*)lnf;
-        char* result = complex_lineform_output(c_lnf, size);
-        if (!result) 
-        {
-            set_error(MEMORY_ERROR);
-            return NULL;
-        }
-        else return result;
-
-    }
-    else if (type == 'f')
-    {
-        float* f_lnf = (float*)lnf;
-        char* result = float_lineform_output(f_lnf, size);  
-        if (!result)
-        {
-            set_error(MEMORY_ERROR);
-            return NULL;
-        }
-        else return result;
-    }
-    else
-    {
-        set_error(INVAL_TYPE);
-        return NULL;
-    }
-}
-
-Lnf get_lineform(char* str, char type)
-{
-    Lnf result;
-
-    if (type == 'c')
-    {
-        Complex* lnf = NULL;
-        unsigned k = 0;
-
-        int i = 0;
-        while (str[i] != '\n' && str[i] != 0)
-        {
-            while (str[i] == ' ') ++i;
-
-            C_info tmp = check_complex_number(str + i);
-            if (tmp.count == 0) 
-            {
-                if (lnf) free(lnf);
+        double real = 0, imag = 0;
+        if (info.count == 2) {
+            char sign;
+            if (sscanf(str + i, "%lf%c%lf*i", &real, &sign, &imag) != 3) {
+                complex_array.delete(&result);
                 set_error(INVAL_INPUT_STR);
-                return ERRO;
+                return err;
             }
-
-            Complex* p = realloc(lnf, sizeof(Complex) * (k + 1));
-            if (!p) 
-            {
-                if (lnf) free(lnf);
-                set_error(MEMORY_ERROR);
-                return ERRO;
-            }
-            lnf = p;
-
-            float im, real;
-
-            if (tmp.count == 2)
-            {
-                if (sscanf(str + i, "%f%f*i", &real, &im) != 2) 
-                {
-                    if (lnf) free(lnf);
-                    set_error(INVAL_INPUT_STR);
-                    return ERRO;
-                }
-                lnf[k].Im = im;
-                lnf[k].Re = real;
-                ++k;
-            }
-            else if(tmp.count == 1)
-            {
-                if (sscanf(str + i, "%f", &real) != 1) 
-                {
-                    if (lnf) free(lnf);
-                    set_error(INVAL_INPUT_STR);
-                    return ERRO;
-                }
-                lnf[k].Im = 0;
-                lnf[k].Re = real;
-                ++k;
-            }
-            else if(tmp.count == -1)
-            {
-                if (sscanf(str + i, "%f*i", &im) != 1)
-                {
-                    if (lnf) free(lnf);
-                    set_error(INVAL_INPUT_STR);
-                    return ERRO;
-                }
-                lnf[k].Im = im;
-                lnf[k].Re = 0;
-                ++k;
-            }
-            i += tmp.len;
-        }
-
-        result.lnf = (void*)lnf;
-        result.size = k;
-    }
-    else if (type == 'f')
-    {
-        float* lnf = NULL;
-        int i = 0;
-        unsigned k = 0;
-
-        while (str[i] != '\n' && str[i] != 0)
-        {
-            while (str[i] == ' ') ++i;
-            float tmp;
-            int count = check_float_number(str+i);
-
-            if (sscanf(str + i, "%f", &tmp) != 1) 
-            {
+            if (sign == '-') imag = -imag;
+        } else if (info.count == 1) {
+            if (sscanf(str + i, "%lf", &real) != 1) {
+                complex_array.delete(&result);
                 set_error(INVAL_INPUT_STR);
-                return ERRO;
+                return err;
             }
-
-            float* p = realloc(lnf, sizeof(float) * (k+1));
-            if (!p) 
-            {
-                if (lnf) free(lnf);
-                set_error(MEMORY_ERROR);
-                return ERRO;
+        } else if (info.count == -1) {
+            if (sscanf(str + i, "%lf*i", &imag) != 1) {
+                complex_array.delete(&result);
+                set_error(INVAL_INPUT_STR);
+                return err;
             }
-            lnf = p;
-
-            i += count;
-            lnf[k] = tmp;
-            ++k;
         }
-        result.lnf = (void*)lnf;
-        result.size = k;
-    }
-    else
-    {
-        set_error(INVAL_TYPE);
-        return ERRO;
+        
+        Complex c = {real, imag};
+        complex_array.append(&result, &c);
+        if (get_error() != NO_ERROR) {
+            complex_array.delete(&result);
+            return err;
+        }
+        i += info.len;
     }
     return result;
 }
 
-void* get_factor(char* str, char type)
-{
-    if (type == 'c')
-    {
-        Complex* result = malloc(sizeof(Complex));
-        if (!result)
-        {
-            set_error(MEMORY_ERROR);
-            return NULL;
-        }
-
-        result->Im = 0;
-        result->Re = 0;
-
-        C_info c = check_complex_number(str);
-
-        if (c.count == 0)
-        {
-            free(result);
-            set_error(INVAL_INPUT_STR);
-            return NULL;
-        }
-
-        if (c.count == 2) sscanf(str, "%f%f*i", &result->Re, &result->Im);
-        else if (c.count == 1) sscanf(str, "%f", &result->Re);
-        else sscanf(str, "%f*i", &result->Im);
-
-        return (void*)result;
-    }
-    else if (type == 'f')
-    {
-        float* result = malloc(sizeof(float));
+dynamic_array parse_double_lineform(const char* str) {
+    dynamic_array err = {NULL, 0};
+    dynamic_array result = double_array.create(0);
+    if (get_error() != NO_ERROR) return err;
+    
+    int i = 0;
+    while (str[i] != '\0') {
+        while (isspace(str[i])) i++;
+        if (!str[i]) break;
         
-        if (check_float_number(str) <= 0)
-        {
+        int len = check_double_number(str + i);
+        if (len <= 0) {
+            double_array.delete(&result);
             set_error(INVAL_INPUT_STR);
-            return NULL;
+            return err;
         }
-
-        sscanf(str, "%f", result);
-
-        return (void*)result;
+        
+        double val;
+        if (sscanf(str + i, "%lf", &val) != 1) {
+            double_array.delete(&result);
+            set_error(INVAL_INPUT_STR);
+            return err;
+        }
+        
+        double_array.append(&result, &val);
+        if (get_error() != NO_ERROR) {
+            double_array.delete(&result);
+            return err;
+        }
+        i += len;
     }
-    else return NULL;
+    return result;
 }
 
-char* number_output(void* num, char type)
-{
-    if (type == 'c')
-    {
-        char* result = malloc(sizeof(char)* (MAX_NUM_LEN * 2 + 5));
-
-        if (!result) 
-        {
-            set_error(MEMORY_ERROR);
-            return NULL;
-        }
-
-        Complex* c_num = (Complex*)num;
-
-        int i = complex_number_output(result, *c_num);
-
-        if ( !i ) 
-        {
-            set_error(OUTPUT_ERROR);
-            free(result);
-            return NULL;
-        }
-        result[i] = 0;
-
-        return result;
-    }
-    else if (type == 'f')
-    {
-        char* result = malloc(sizeof(char) * MAX_NUM_LEN);
-
-        if (!result) 
-        {
-            set_error(MEMORY_ERROR);
-            return NULL;
-        }
-
-        float* f_num = (float*)num;
-
-        int i = sprintf(result, "%.2f", *f_num);
-
-        if ( !i ) 
-        {
-            set_error(OUTPUT_ERROR);
-            free(result);
-            return NULL;
-        }
-        result[i] = 0;
-
-        return result;
-    }
-    else 
-    {
-        set_error(INVAL_TYPE);
+char* format_complex_lineform(dynamic_array* arr) {
+    if (!arr->data || arr->size == 0) {
+        set_error(INVAL_LINEFORM_PARAMETES);
         return NULL;
     }
+    Complex* coeffs = (Complex*)arr->data;
+    size_t size = arr->size;
+    char* buffer = malloc(sizeof(char) * (MAX_NUM_LEN * 2 + 10) * (size + 1));
+    if (!buffer) {
+        set_error(MEMORY_ERROR);
+        return NULL;
+    }
+    int p = 0;
+    if (coeffs[0].Re != 0 || coeffs[0].Im != 0)
+        p += complex_to_string(buffer + p, coeffs[0]);
+    for (size_t i = 1; i < size; i++) {
+        if (coeffs[i].Re == 0 && coeffs[i].Im == 0) continue;
+        if (p > 0) p += sprintf(buffer + p, " + ");
+        if (coeffs[i].Re != 0 && coeffs[i].Im != 0) {
+            buffer[p++] = '(';
+            p += complex_to_string(buffer + p, coeffs[i]);
+            buffer[p++] = ')';
+        } else {
+            p += complex_to_string(buffer + p, coeffs[i]);
+        }
+        p += sprintf(buffer + p, "*x%zu", i);
+    }
+    if (p == 0) p += sprintf(buffer + p, "0");
+    buffer[p] = '\0';
+    return buffer;
 }
 
-char* error_massage()
-{
-    enum error err_code = get_error();
-    
-    switch(err_code)
-    {
-        case NO_ERROR:
-            return "Неизвестная ошибка.";
-        case MEMORY_ERROR:
-            return "Ошибка выделения памяти.";
-        case INVAL_TYPE:
-            return "Ошибка: неизвестный тип.";
-        case INVAL_LNF_PARAM:
-            return "Ошибка: неверные параметры.";
-        case INVAL_INPUT_STR:
-            return "Ошибка: неверная строка ввода.";
-        case OUTPUT_ERROR:
-            return "Ошибка в работе функций stdio.";
-        case INVAL_INPUT_TYPE:
-            return "Неизвестный формат вввода.";
-        default:
-            return NULL;
+char* format_double_lineform(dynamic_array* arr) {
+    if (!arr->data || arr->size == 0) {
+        set_error(INVAL_LINEFORM_PARAMETES);
+        return NULL;
     }
+    double* coeffs = (double*)arr->data;
+    size_t size = arr->size;
+    char* buffer = malloc(sizeof(char) * MAX_NUM_LEN * (size + 1));
+    if (!buffer) {
+        set_error(MEMORY_ERROR);
+        return NULL;
+    }
+    int p = 0;
+    if (coeffs[0] != 0) p += sprintf(buffer + p, "%.2f", coeffs[0]);
+    for (size_t i = 1; i < size; i++) {
+        if (coeffs[i] == 0) continue;
+        if (p > 0) p += sprintf(buffer + p, " + ");
+        p += sprintf(buffer + p, "%.2f*x%zu", coeffs[i], i);
+    }
+    if (p == 0) p += sprintf(buffer + p, "0");
+    buffer[p] = '\0';
+    return buffer;
 }
+
+void* parse_complex_factor(const char* str) {
+    Complex* res = malloc(sizeof(Complex));
+    if (!res) {
+        set_error(MEMORY_ERROR);
+        return NULL;
+    }
+    C_info info = check_complex_number(str);
+    if (info.count == 0) {
+        free(res);
+        set_error(INVAL_INPUT_STR);
+        return NULL;
+    }
+    double real = 0, imag = 0;
+    if (info.count == 2) {
+        char sign;
+        if (sscanf(str, "%lf%c%lf*i", &real, &sign, &imag) != 3) {
+            free(res);
+            set_error(INVAL_INPUT_STR);
+            return NULL;
+        }
+        if (sign == '-') imag = -imag;
+    } else if (info.count == 1) {
+        if (sscanf(str, "%lf", &real) != 1) {
+            free(res);
+            set_error(INVAL_INPUT_STR);
+            return NULL;
+        }
+    } else {
+        if (sscanf(str, "%lf*i", &imag) != 1) {
+            free(res);
+            set_error(INVAL_INPUT_STR);
+            return NULL;
+        }
+    }
+    res->Re = real;
+    res->Im = imag;
+    return res;
+}
+
+void* parse_double_factor(const char* str) {
+    void* void_res;
+    double* res = malloc(sizeof(double));
+    if (!res) {
+        set_error(MEMORY_ERROR);
+        return NULL;
+    }
+    if (check_double_number(str) <= 0) {
+        free(res);
+        set_error(INVAL_INPUT_STR);
+        return NULL;
+    }
+    sscanf(str, "%lf", res);
+    void_res = (void*)res;
+    return void_res;
+}
+
+char* format_complex_number(void* num) {
+    char* buf = malloc(MAX_NUM_LEN * 2 + 5);
+    if (!buf) {
+        set_error(MEMORY_ERROR);
+        return NULL;
+    }
+    Complex* complex_num = (Complex*)num;
+    int len = complex_to_string(buf, *complex_num);
+    if (len == 0) {
+        free(buf);
+        set_error(OUTPUT_ERROR);
+        return NULL;
+    }
+    buf[len] = '\0';
+    return buf;
+}
+
+char* format_double_number(void* num) {
+    char* buf = malloc(MAX_NUM_LEN);
+    if (!buf) {
+        set_error(MEMORY_ERROR);
+        return NULL;
+    }
+    double* double_num = (double*)num;
+    int len = sprintf(buf, "%.2f", *double_num);
+    if (len == 0) {
+        free(buf);
+        set_error(OUTPUT_ERROR);
+        return NULL;
+    }
+    buf[len] = '\0';
+    return buf;
+}
+
+void clean_input_buffer(void) {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+InputOutput complex_input_output = {
+    .format_lineform = format_complex_lineform,
+    .format_number = format_complex_number,
+    .parse_lineform = parse_complex_lineform,
+    .parse_factor = parse_complex_factor
+};
+
+InputOutput double_input_output = {
+    .format_lineform = format_double_lineform,
+    .format_number = format_double_number,
+    .parse_lineform = parse_double_lineform,
+    .parse_factor = parse_double_factor
+};

@@ -1,39 +1,41 @@
 #ifndef IO_H
 #define IO_H
 
+#include "lineform.h"
 #include "complex.h"
-#include <stdlib.h>
-#include <stdarg.h>
 
-#define  MAX_NUM_LEN 50
-
-typedef struct 
-{
-    void* lnf;
-    int size;
-}Lnf;
-
-typedef struct 
-{
-    unsigned len;
+typedef struct {
+    int len;
     int count;
-}C_info;
+    char sign;
+} C_info;
 
-#define ERRO (Lnf){NULL, 0}
+typedef struct {
+    dynamic_array (*parse_lineform)(const char* str);
+    char* (*format_lineform)(dynamic_array* arr);
+    void* (*parse_factor)(const char* str);
+    char* (*format_number)(void* num);
+}InputOutput;
 
-void clean_input_buffer();
+int complex_to_string(char* buf, Complex c);
+C_info check_complex_number(const char* str);
+int check_double_number(const char* str);
 
-void map(void func(void*), int count, ...);
-C_info check_complex_number(char* str);
-int check_float_number(char* str);
-int get_complex_number(char* str, Complex* num);
-int complex_number_output(char* str, Complex num);
-char* complex_lineform_output(Complex* lnf, unsigned size);
-char* float_lineform_output(float* lnf, unsigned size);
-char* lineform_output(void* lnf, unsigned size, char type);
-Lnf get_lineform(char* str, char type);
-void* get_factor(char* str, char type);
-char* number_output(void* num, char type);
-char* error_massage();
+dynamic_array parse_complex_lineform(const char* str);
+dynamic_array parse_double_lineform(const char* str);
+
+char* format_complex_lineform(dynamic_array* arr);
+char* format_double_lineform(dynamic_array* arr);
+
+void* parse_complex_factor(const char* str);
+void* parse_double_factor(const char* str);
+
+char* format_complex_number(void* num);
+char* format_double_number(void* num);
+
+void clean_input_buffer(void);
+
+extern InputOutput complex_input_output;
+extern InputOutput double_input_output;
 
 #endif

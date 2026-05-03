@@ -7,24 +7,24 @@ enum error
     NO_ERROR,
     MEMORY_ERROR,
     INVAL_TYPE,
-    INVAL_LNF_PARAM,
+    INVAL_LINEFORM_PARAMETES,
     INVAL_INPUT_STR,
     OUTPUT_ERROR,
-    INVAL_INPUT_TYPE
+    INVAL_INPUT_TYPE,
+    OUT_OF_RANGE
 };
 
 extern enum error error_info;
 
 void set_error(enum error err_code);
 enum error get_error();
+void clear_error();
 
-extern Type_info1 func1_cmplx;
-
-extern Type_info1 func1_flt;
-
-extern Type_info2 func2_cmplx;
-
-extern Type_info2 func2_flt;
-
+#define IS_ALRIGHT(return_value)  \
+    do { \
+        if (get_error() != NO_ERROR) { \
+            return return_value; \
+        } \
+    } while(0)
 
 #endif
