@@ -378,10 +378,10 @@ int test_complex_array_utils() {
               "неправильные комплексные значения после append", &passed);
     c = (Complex){5,6};
     complex_array.insertat(arr, &c, 0);
-    CHECK_COND(complex_eq(data[0], (Complex){5,6}), "insert at установил неправильные комплексные значения", &passed);
+    CHECK_COND(complex_eq(data[0], (Complex){5,6}), "insertat установил неправильные комплексные значения", &passed);
     data[0] = (Complex){6,7};
     Complex* tmp = double_array.get(arr, 0);
-    CHECK_COND(complex_eq(*tmp, (Complex){6,7}), "get вернул непрвильное комплексное значение", &passed);
+    CHECK_COND(complex_eq(*tmp, (Complex){6,7}), "get вернул неправильное комплексное значение", &passed);
     complex_array.delete(&arr);
     CHECK_COND(arr.data == NULL && arr.size == 0, "delete не очистил массив", &passed);
     if (passed) printf("  test_complex_array_utils OK\n");
@@ -396,7 +396,7 @@ int test_double_sum() {
     CHECK_COND(res.size == 3, "неправильный размер результата суммы", &passed);
     double* data = (double*)res.data;
     double expected[] = {11.0, 22.0, 3.0};
-    CHECK_COND(double_arr_eq(data, expected, 3), "неправильная сумма double", &passed);
+    CHECK_COND(double_arr_eq(data, expected, 3), "неправильная сумма действительных линейных форм", &passed);
     double_array.delete(&a);
     double_array.delete(&b);
     double_array.delete(&res);
@@ -410,9 +410,9 @@ int test_complex_sum() {
     dynamic_array a = complex_array.create_and_init(3, (Complex){1,1}, (Complex){2,2}, (Complex){3,3});
     dynamic_array b = complex_array.create_and_init(2, (Complex){10,10}, (Complex){20,20});
     dynamic_array res = get_complex_sum(a, b);
-    CHECK_COND(res.size == 3, "неправильный размер результата суммы комплексов", &passed);
+    CHECK_COND(res.size == 3, "неправильный размер результата суммы комплексных линейных форм", &passed);
     Complex* data = (Complex*)res.data;
-    CHECK_COND(complex_arr_eq(data, exp, 3), "неправильная сумма комплексных чисел", &passed);
+    CHECK_COND(complex_arr_eq(data, exp, 3), "неправильная сумма комплексных линейных форм", &passed);
     complex_array.delete(&a);
     complex_array.delete(&b);
     complex_array.delete(&res);
@@ -428,7 +428,7 @@ int test_double_difference() {
     CHECK_COND(res.size == 3, "неправильный размер разности", &passed);
     double* data = (double*)res.data;
     double expected[] = {4.0, 2.0, 3.0};
-    CHECK_COND(double_arr_eq(data, expected, 3), "неправильная разность double", &passed);
+    CHECK_COND(double_arr_eq(data, expected, 3), "неправильная разность действительных линейных форм", &passed);
     double_array.delete(&a);
     double_array.delete(&b);
     double_array.delete(&res);
@@ -475,7 +475,7 @@ int test_complex_multiplication() {
     dynamic_array res = get_complex_multiplication(a, &factor);
     CHECK_COND(res.size == 3, "неправильный размер произведения комплексной линейной формы", &passed);
     Complex* data = (Complex*)res.data;
-    CHECK_COND(complex_arr_eq(data, exp, 3), "неправильное умножение комплексных чисел", &passed);
+    CHECK_COND(complex_arr_eq(data, exp, 3), "неправильное умножение комплексной линейной формы", &passed);
     complex_array.delete(&a);
     complex_array.delete(&res);
     if (passed) printf("  test_complex_multiplication OK\n");
@@ -518,7 +518,7 @@ int test_complex_calculation() {
 
 /* ---------- Главная функция запуска тестов ---------- */
 int main() {
-    printf("========== ЗАПУСК ТЕСТОВ ==========\n\n");
+    printf("================================== ЗАПУСК ТЕСТОВ ==================================\n");
 
     int (*tests[])() = {
         test_add_complex,
@@ -557,7 +557,7 @@ int main() {
         printf("\n");
     }
 
-    printf("========== РЕЗУЛЬТАТ ==========\n");
+    printf("================================== РЕЗУЛЬТАТ ==================================\n");
     printf("Пройдено тестов: %d из %d\n", passed, num_tests);
     return 0;
 }
